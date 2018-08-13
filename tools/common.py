@@ -205,10 +205,9 @@ VS2013_VCVARS = ("C:\\Program Files (x86)\\Microsoft Visual Studio 12.0"
 VS2010_VCVARS = ("C:\\Program Files (x86)\\Microsoft Visual Studio 10.0"
                  "\\VC\\vcvarsall.bat")
 
-VS2008_VCVARS = ("%LocalAppData%\\Programs\\Common\\Microsoft"
-                 "\\Visual C++ for Python\\9.0\\vcvarsall.bat")
-VS2008_BUILD = ("%LocalAppData%\\Programs\\Common\\"
-                "Microsoft\\Visual C++ for Python\\9.0\\"
+VS2008_VCVARS = ("C:\\Program Files (x86)\\Microsoft Visual Studio 9.0"
+                 "\\VC\\vcvarsall.bat")
+VS2008_BUILD = ("C:\\Program Files (x86)\\Microsoft Visual Studio 9.0"
                 "VC\\bin\\amd64\\vcbuild.exe")
 if "LOCALAPPDATA" in os.environ:
     VS2008_VCVARS = VS2008_VCVARS.replace("%LocalAppData%",
