@@ -581,6 +581,11 @@ def Initialize(applicationSettings=None, commandLineSwitches=None, **kwargs):
     # ------------------------------------------------------------------------
     if not "multi_threaded_message_loop" in application_settings:
         application_settings["multi_threaded_message_loop"] = False
+    if not "multi_threaded_message_loop_windows" in application_settings:
+        application_settings["multi_threaded_message_loop_windows"] = False
+    else:
+        # multi_threaded_message_loop_windows overrides multi_threaded_message_loop
+        application_settings["multi_threaded_message_loop"] = application_settings["multi_threaded_message_loop_windows"]
     if not "single_process" in application_settings:
         application_settings["single_process"] = False
     # ------------------------------------------------------------------------
@@ -883,11 +888,12 @@ def Shutdown():
     # and closes browser automatically if you give it some time.
     # If the time was not enough, then there is an emergency plan,
     # the code block further down that checks len(g_pyBrowsers).
-    for _ in range(20):
-        for __ in range(10):
-            with nogil:
-                CefDoMessageLoopWork()
-        time.sleep(0.01)
+    if not GetAppSetting("multi_threaded_message_loop_windows"):
+        for _ in range(20):
+            for __ in range(10):
+                with nogil:
+                    CefDoMessageLoopWork()
+            time.sleep(0.01)
 
     # Emergency plan in case the code above didn't close browsers,
     # and neither browsers were closed in client app. This code
@@ -911,7 +917,7 @@ def Shutdown():
                 browser_close_forced = True
             browser = None  # free reference
             RemovePyBrowser(browserId)
-        if browser_close_forced:
+        if browser_close_forced and not GetAppSetting("multi_threaded_message_loop_windows"):
             for _ in range(20):
                 for __ in range(10):
                     with nogil:

@@ -75,6 +75,8 @@ cdef void SetApplicationSettings(
             cefAppSettings.log_severity = <cef_types.cef_log_severity_t><int>int(appSettings[key])
         elif key == "multi_threaded_message_loop":
             cefAppSettings.multi_threaded_message_loop = int(appSettings[key])
+        elif key == "multi_threaded_message_loop_windows":
+            pass  # this setting overrides multi_threaded_message_loop_windows and does not need to be handled here.
         elif key == "net_security_expiration_enabled":
             cefAppSettings.enable_net_security_expiration =\
                     int(appSettings[key])
