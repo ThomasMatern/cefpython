@@ -23,7 +23,8 @@ Usage:
 
 Options:
     VERSION                Version number eg. 50.0
-    --no-run-examples      Do not run examples after build, only unit tests
+    --no-run-examples      Do not run examples after build.
+    --no-run-unit-tests    Do not run unit tests after build.
     --fast                 Fast mode
     --clean                Clean C++ projects build files on Linux/Mac
     --kivy                 Run only Kivy example
@@ -78,6 +79,7 @@ except NameError:
 # Command line args variables
 VERSION = ""
 NO_RUN_EXAMPLES = False
+NO_RUN_UNIT_TESTS = False
 DEBUG_FLAG = False
 FAST_FLAG = False
 CLEAN_FLAG = False
@@ -89,6 +91,8 @@ ENABLE_LINE_TRACING = False
 
 # First run
 FIRST_RUN = False
+
+argv_backup = sys.argv[1:]  # remember all args for re-run
 
 
 def main():
@@ -123,7 +127,7 @@ def main():
 
 def command_line_args():
     global DEBUG_FLAG, FAST_FLAG, CLEAN_FLAG, KIVY_FLAG, HELLO_WORLD_FLAG, \
-           REBUILD_CPP, VERSION, NO_RUN_EXAMPLES
+           REBUILD_CPP, VERSION, NO_RUN_EXAMPLES, NO_RUN_UNIT_TESTS
 
     VERSION = get_version_from_command_line_args(__file__)
     # Other scripts called by this script expect that version number
@@ -139,6 +143,11 @@ def command_line_args():
         NO_RUN_EXAMPLES = True
         print("[build.py] Running examples disabled (--no-run-examples)")
         sys.argv.remove("--no-run-examples")
+
+    if "--no-run-unit-tests" in sys.argv:
+        NO_RUN_UNIT_TESTS = True
+        print("[build.py] Running unit tests disabled (--no-run-unit-tests)")
+        sys.argv.remove("--no-run-unit-tests")
 
     if "--debug" in sys.argv:
         DEBUG_FLAG = True
@@ -796,7 +805,7 @@ def build_cefpython_module():
             args.append("\"{python}\"".format(python=sys.executable))
             args.append(os.path.join(TOOLS_DIR, os.path.basename(__file__)))
             assert __file__ in sys.argv[0]
-            args.extend(sys.argv[1:])
+            args.extend(argv_backup)
             command = " ".join(args)
             ret = subprocess.call(command, shell=True)
             # Always pass fixed value to sys.exit, read note at
@@ -890,15 +899,16 @@ def install_and_run():
     delete_directory_reliably(setup_installer_dir)
 
     # Run unittests
-    print("[build.py] Run unittests")
-    test_runner = os.path.join(UNITTESTS_DIR, "_test_runner.py")
-    command = ("\"{python}\" {test_runner}"
-               .format(python=sys.executable,
-                       test_runner=test_runner))
-    ret = os.system(command)
-    if ret != 0:
-        print("[build.py] ERROR while running unit tests")
-        sys.exit(1)
+    if not NO_RUN_UNIT_TESTS:
+        print("[build.py] Run unittests")
+        test_runner = os.path.join(UNITTESTS_DIR, "_test_runner.py")
+        command = ("\"{python}\" {test_runner}"
+                   .format(python=sys.executable,
+                           test_runner=test_runner))
+        ret = os.system(command)
+        if ret != 0:
+            print("[build.py] ERROR while running unit tests")
+            sys.exit(1)
 
     # Run examples
     if not NO_RUN_EXAMPLES:
