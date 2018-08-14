@@ -25,6 +25,7 @@ Options:
     VERSION                Version number eg. 50.0
     --no-run-examples      Do not run examples after build.
     --no-run-unit-tests    Do not run unit tests after build.
+    --disable-cython-version-check  Do no check if the correct version on cython is installed
     --fast                 Fast mode
     --clean                Clean C++ projects build files on Linux/Mac
     --kivy                 Run only Kivy example
@@ -88,6 +89,7 @@ HELLO_WORLD_FLAG = False
 REBUILD_CPP = False
 ENABLE_PROFILING = False
 ENABLE_LINE_TRACING = False
+DISABLE_CYTHON_VERSION_CHECK = False
 
 # First run
 FIRST_RUN = False
@@ -127,7 +129,7 @@ def main():
 
 def command_line_args():
     global DEBUG_FLAG, FAST_FLAG, CLEAN_FLAG, KIVY_FLAG, HELLO_WORLD_FLAG, \
-           REBUILD_CPP, VERSION, NO_RUN_EXAMPLES, NO_RUN_UNIT_TESTS
+           REBUILD_CPP, VERSION, NO_RUN_EXAMPLES, NO_RUN_UNIT_TESTS, DISABLE_CYTHON_VERSION_CHECK
 
     VERSION = get_version_from_command_line_args(__file__)
     # Other scripts called by this script expect that version number
@@ -148,6 +150,11 @@ def command_line_args():
         NO_RUN_UNIT_TESTS = True
         print("[build.py] Running unit tests disabled (--no-run-unit-tests)")
         sys.argv.remove("--no-run-unit-tests")
+
+    if "--disable-cython-version-check" in sys.argv:
+        DISABLE_CYTHON_VERSION_CHECK = True
+        print("[build.py] Cython version check disabled (--disable-cython-version-check)")
+        sys.argv.remove("--disable-cython-version-check")
 
     if "--debug" in sys.argv:
         DEBUG_FLAG = True
@@ -222,7 +229,7 @@ def check_cython_version():
         print("[build.py] ERROR: Cython is not installed ({0} required)"
               .format(require_version))
         sys.exit(1)
-    if version != require_version:
+    if version != require_version and not DISABLE_CYTHON_VERSION_CHECK:
         print("[build.py] ERROR: Wrong Cython version: {0}. Required: {1}"
               .format(version, require_version))
         sys.exit(1)
