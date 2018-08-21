@@ -48,3 +48,15 @@ bool DisplayHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
     return DisplayHandler_OnConsoleMessage(browser, level, message, source,
                                            line);
 }
+
+bool DisplayHandler::OnAutoResize(CefRefPtr<CefBrowser> browser,
+                                  const CefSize& new_size) {
+    REQUIRE_UI_THREAD();
+    return DisplayHandler_OnAutoResize(browser, new_size);
+}
+
+void DisplayHandler::OnLoadingProgressChange(CefRefPtr<CefBrowser> browser,
+                                             double progress) {
+    REQUIRE_UI_THREAD();
+    return DisplayHandler_OnLoadingProgressChange(browser, progress);
+}

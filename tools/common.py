@@ -125,8 +125,9 @@ else:
 assert __file__
 ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
-# API reference
+# API reference and docs
 API_DIR = os.path.join(ROOT_DIR, "api")
+DOCS_DIR = os.path.join(ROOT_DIR, "docs")
 
 # Build directories
 BUILD_DIR = os.path.join(ROOT_DIR, "build")
@@ -157,6 +158,7 @@ BUILD_SUBPROCESS = os.path.join(BUILD_CEFPYTHON,
 # -- end build directories
 
 EXAMPLES_DIR = os.path.join(ROOT_DIR, "examples")
+SNIPPETS_DIR = os.path.join(EXAMPLES_DIR, "snippets")
 SRC_DIR = os.path.join(ROOT_DIR, "src")
 
 # Subdirectories in src/
@@ -191,29 +193,28 @@ CPP_UTILS_LIB = os.path.join(BUILD_CPP_UTILS,
 SUBPROCESS_EXE = os.path.join(BUILD_SUBPROCESS,
                               "subprocess" + EXECUTABLE_EXT)
 
-# Visual Studio constants
+# These Visual Studio constants are used by automate.py tool
+# to build upstream C++ projects. CEF Python C++ code is built
+# with setuptools/distutils in the build_cpp_projects.py tool.
+# -----------------------------------------------------------------------------
+
 VS_PLATFORM_ARG = "x86" if ARCH32 else "amd64"
 
 VS2015_VCVARS = ("C:\\Program Files (x86)\\Microsoft Visual Studio 14.0"
                  "\\VC\\vcvarsall.bat")
 
-# For CEF build
 VS2013_VCVARS = ("C:\\Program Files (x86)\\Microsoft Visual Studio 12.0"
                  "\\VC\\vcvarsall.bat")
 
-# VS2010 vcvarsall not used, using detection with setuptools instead
 VS2010_VCVARS = ("C:\\Program Files (x86)\\Microsoft Visual Studio 10.0"
                  "\\VC\\vcvarsall.bat")
 
 VS2008_VCVARS = ("C:\\Program Files (x86)\\Microsoft Visual Studio 9.0"
                  "\\VC\\vcvarsall.bat")
-VS2008_BUILD = ("C:\\Program Files (x86)\\Microsoft Visual Studio 9.0"
-                "VC\\bin\\amd64\\vcbuild.exe")
-if "LOCALAPPDATA" in os.environ:
-    VS2008_VCVARS = VS2008_VCVARS.replace("%LocalAppData%",
-                                          os.environ["LOCALAPPDATA"])
-    VS2008_BUILD = VS2008_BUILD.replace("%LocalAppData%",
-                                        os.environ["LOCALAPPDATA"])
+
+if WINDOWS and not os.path.exists(VS2008_VCVARS):
+    VS2008_VCVARS = (os.environ["LOCALAPPDATA"]+"\\Programs\\Common\\Microsoft"
+                     "\\Visual C++ for Python\\9.0\\vcvarsall.bat")
 
 # -----------------------------------------------------------------------------
 

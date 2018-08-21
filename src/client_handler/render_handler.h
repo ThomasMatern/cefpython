@@ -4,13 +4,20 @@
 
 #include "common/cefpython_public_api.h"
 #include "include/cef_render_handler.h"
+#include "accessibility_handler.h"
 
 
-class RenderHandler : public CefRenderHandler
+class RenderHandler : public CefRenderHandler,
+                      public AccessibilityHandler
 {
 public:
     RenderHandler(){}
     virtual ~RenderHandler(){}
+
+    CefRefPtr<CefAccessibilityHandler> GetAccessibilityHandler()
+                override {
+        return this;
+    }
 
     bool GetRootScreenRect(CefRefPtr<CefBrowser> browser,
                            CefRect& rect) override;
@@ -56,6 +63,10 @@ public:
 
     void UpdateDragCursor(CefRefPtr<CefBrowser> browser,
                           cef_drag_operations_mask_t operation) override;
+
+    void OnTextSelectionChanged(CefRefPtr<CefBrowser> browser,
+                                const CefString& selected_text,
+                                const CefRange& selected_range) override;
 
 private:
     IMPLEMENT_REFCOUNTING(RenderHandler);

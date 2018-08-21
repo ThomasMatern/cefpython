@@ -3,7 +3,7 @@
 Table of contents:
 * [Introduction](#introduction)
 * [Sponsors](#sponsors)
-* [Funding for the v66 release](#funding-for-the-v66-release)
+  * [Thanks to Lampix for the v66 release](#thanks-to-lampix-for-the-v66-release)
 * [Install](#install)
 * [Tutorial](#tutorial)
 * [Examples](#examples)
@@ -92,15 +92,15 @@ See the [Support development](#support-development) section for a list of
 all the individuals and companies supporting CEF Python.
 
 
-## Funding for the v66 release
+### Thanks to Lampix for the v66 release
 
-I am happy to announce that Lampix is sponsoring the v66 release of cefpython.
+Many Thanks to Lampix for sponsoring the [v66 release](../../releases) of CEF Python.
 Lampix is the first hardware and software solution that turns any surface
 into a smart, augmented reality or interactive surface. Please visit its
-website here: https://lampix.com/ . See the [v66 milestone](../../milestone/13)
-to see progress on the new release.
+website here: https://lampix.com/ .
 
-[![lampix600](https://raw.githubusercontent.com/wiki/cztomczak/cefpython/images/lampix600.png)](https://lampix.com/)
+[![lampix360](https://raw.githubusercontent.com/wiki/cztomczak/cefpython/images/lampix360.png)](https://lampix.com/)
+
 
 ## Install
 
@@ -110,8 +110,9 @@ also download packages for offline installation available on the
 [GitHub Releases](../../releases) pages. Command to install with pip:
 
 ```
-pip install cefpython3==57.0
+pip install cefpython3==66.0
 ```
+
 
 ## Tutorial
 
@@ -169,6 +170,7 @@ This README page alone has 1,070 visitors and 2,402 views every two weeks,
 so your company logo and a website link will be visible to many Python developers.
 The statistics are from Mar 9, 2018. Complete statistics are available in this topic
 on the Forum: [[ANN] Call for sponsors](https://groups.google.com/d/topic/cefpython/CjkZF2P4rMk/discussion).
+
 
 ### Thanks
 
@@ -291,6 +293,7 @@ Additional information for v31.2 release:
 
 #### Client handlers (interfaces)
 
+ * [AccessibilityHandler](api/AccessibilityHandler.md#accessibilityhandler-interface)
  * [DisplayHandler](api/DisplayHandler.md#displayhandler-interface)
  * [DownloadHandler](api/DownloadHandler.md#downloadhandler)
  * [FocusHandler](api/FocusHandler.md#focushandler-interface)
@@ -313,6 +316,9 @@ Additional information for v31.2 release:
 
 ### API index
 
+* [AccessibilityHandler (interface)](api/AccessibilityHandler.md#accessibilityhandler-interface)
+  * [_OnAccessibilityTreeChange](api/AccessibilityHandler.md#_onaccessibilitytreechange)
+  * [_OnAccessibilityLocationChange](api/AccessibilityHandler.md#_onaccessibilitylocationchange)
 * [Application settings](api/ApplicationSettings.md#application-settings)
   * [accept_language_list](api/ApplicationSettings.md#accept_language_list)
   * [app_user_model_id](api/ApplicationSettings.md#app_user_model_id)
@@ -377,6 +383,7 @@ Additional information for v31.2 release:
   * [GetNSTextInputContext](api/Browser.md#getnstextinputcontext)
   * [GetOpenerWindowHandle](api/Browser.md#getopenerwindowhandle)
   * [GetOuterWindowHandle](api/Browser.md#getouterwindowhandle)
+  * [GetSetting](api/Browser.md#getsetting)
   * [GetUrl](api/Browser.md#geturl)
   * [GetUserData](api/Browser.md#getuserdata)
   * [GetWindowHandle](api/Browser.md#getwindowhandle)
@@ -386,7 +393,9 @@ Additional information for v31.2 release:
   * [GoForward](api/Browser.md#goforward)
   * [HandleKeyEventAfterTextInputClient](api/Browser.md#handlekeyeventaftertextinputclient)
   * [HandleKeyEventBeforeTextInputClient](api/Browser.md#handlekeyeventbeforetextinputclient)
+  * [HasDevTools](api/Browser.md#hasdevtools)
   * [HasDocument](api/Browser.md#hasdocument)
+  * [Invalidate](api/Browser.md#invalidate)
   * [IsFullscreen](api/Browser.md#isfullscreen)
   * [IsLoading](api/Browser.md#isloading)
   * [IsMouseCursorChangeDisabled](api/Browser.md#ismousecursorchangedisabled)
@@ -401,6 +410,7 @@ Additional information for v31.2 release:
   * [Reload](api/Browser.md#reload)
   * [ReloadIgnoreCache](api/Browser.md#reloadignorecache)
   * [ReplaceMisspelling](api/Browser.md#replacemisspelling)
+  * [SetAutoResizeEnabled](api/Browser.md#setautoresizeenabled)
   * [SetBounds](api/Browser.md#setbounds)
   * [SendKeyEvent](api/Browser.md#sendkeyevent)
   * [SendMouseClickEvent](api/Browser.md#sendmouseclickevent)
@@ -408,6 +418,7 @@ Additional information for v31.2 release:
   * [SendMouseWheelEvent](api/Browser.md#sendmousewheelevent)
   * [SendFocusEvent](api/Browser.md#sendfocusevent)
   * [SendCaptureLostEvent](api/Browser.md#sendcapturelostevent)
+  * [SetAccessibilityState](api/Browser.md#setaccessibilitystate)
   * [SetClientCallback](api/Browser.md#setclientcallback)
   * [SetClientHandler](api/Browser.md#setclienthandler)
   * [SetFocus](api/Browser.md#setfocus)
@@ -432,6 +443,7 @@ Additional information for v31.2 release:
   * [default_encoding](api/BrowserSettings.md#default_encoding)
   * [dom_paste_disabled](api/BrowserSettings.md#dom_paste_disabled)
   * [file_access_from_file_urls_allowed](api/BrowserSettings.md#file_access_from_file_urls_allowed)
+  * [inherit_client_handlers_for_popups](api/BrowserSettings.md#inherit_client_handlers_for_popups)
   * [image_load_disabled](api/BrowserSettings.md#image_load_disabled)
   * [javascript_disabled](api/BrowserSettings.md#javascript_disabled)
   * [javascript_close_windows_disallowed](api/BrowserSettings.md#javascript_close_windows_disallowed)
@@ -456,19 +468,23 @@ Additional information for v31.2 release:
   * [ExceptHook](api/cefpython.md#excepthook)
   * [GetAppSetting](api/cefpython.md#getappsetting)
   * [GetAppPath](api/cefpython.md#getapppath)
+  * [GetBrowserByIdentifier](api/cefpython.md#getbrowserbyidentifier)
   * [GetBrowserByWindowHandle](api/cefpython.md#getbrowserbywindowhandle)
   * [GetCommandLineSwitch](api/cefpython.md#getcommandlineswitch)
+  * [GetDataUrl](api/cefpython.md#getdataurl)
   * [GetGlobalClientCallback](api/cefpython.md#getglobalclientcallback)
   * [GetModuleDirectory](api/cefpython.md#getmoduledirectory)
   * [GetVersion](api/cefpython.md#getversion)
   * [Initialize](api/cefpython.md#initialize)
   * [IsThread](api/cefpython.md#isthread)
+  * [LoadCrlSetsFile](api/cefpython.md#loadcrlsetsfile)
   * [MessageLoop](api/cefpython.md#messageloop)
   * [MessageLoopWork](api/cefpython.md#messageloopwork)
   * [PostTask](api/cefpython.md#posttask)
   * [PostDelayedTask](api/cefpython.md#postdelayedtask)
   * [QuitMessageLoop](api/cefpython.md#quitmessageloop)
   * [SetGlobalClientCallback](api/cefpython.md#setglobalclientcallback)
+  * [SetGlobalClientHandler](api/cefpython.md#setglobalclienthandler)
   * [SetOsModalLoop](api/cefpython.md#setosmodalloop)
   * [Shutdown](api/cefpython.md#shutdown)
 * [Command line switches](api/CommandLineSwitches.md#command-line-switches)
@@ -501,6 +517,7 @@ Additional information for v31.2 release:
   * [GetExpires](api/Cookie.md#getexpires)
 * [CookieManager (class)](api/CookieManager.md#cookiemanager-class)
   * [GetGlobalManager](api/CookieManager.md#getglobalmanager)
+  * [GetBlockingManager](api/CookieManager.md#getblockingmanager)
   * [CreateManager](api/CookieManager.md#createmanager)
   * [SetSupportedSchemes](api/CookieManager.md#setsupportedschemes)
   * [VisitAllCookies](api/CookieManager.md#visitallcookies)
@@ -513,10 +530,12 @@ Additional information for v31.2 release:
   * [Visit](api/CookieVisitor.md#visit)
 * [DisplayHandler (interface)](api/DisplayHandler.md#displayhandler-interface)
   * [OnAddressChange](api/DisplayHandler.md#onaddresschange)
+  * [OnAutoResize](api/DisplayHandler.md#onautoresize)
+  * [OnConsoleMessage](api/DisplayHandler.md#onconsolemessage)
+  * [OnLoadingProgressChange](api/DisplayHandler.md#onloadingprogresschange)
+  * [OnStatusMessage](api/DisplayHandler.md#onstatusmessage)
   * [OnTitleChange](api/DisplayHandler.md#ontitlechange)
   * [OnTooltip](api/DisplayHandler.md#ontooltip)
-  * [OnStatusMessage](api/DisplayHandler.md#onstatusmessage)
-  * [OnConsoleMessage](api/DisplayHandler.md#onconsolemessage)
 * [DownloadHandler](api/DownloadHandler.md#downloadhandler)
 * [DpiAware (class)](api/DpiAware.md#dpiaware-class)
   * [CalculateWindowSize](api/DpiAware.md#calculatewindowsize)
@@ -524,6 +543,7 @@ Additional information for v31.2 release:
   * [GetSystemDpi](api/DpiAware.md#getsystemdpi)
   * [IsProcessDpiAware](api/DpiAware.md#isprocessdpiaware)
   * [SetProcessDpiAware](api/DpiAware.md#setprocessdpiaware)
+  * [Scale](api/DpiAware.md#scale)
 * [DragData (object)](api/DragData.md#dragdata-object)
   * [IsLink](api/DragData.md#islink)
   * [IsFragment](api/DragData.md#isfragment)
@@ -590,10 +610,10 @@ Additional information for v31.2 release:
   * [OnPreKeyEvent](api/KeyboardHandler.md#onprekeyevent)
   * [OnKeyEvent](api/KeyboardHandler.md#onkeyevent)
 * [LifespanHandler (interface)](api/LifespanHandler.md#lifespanhandler-interface)
-  * [OnBeforePopup](api/LifespanHandler.md#onbeforepopup)
-  * [_OnAfterCreated](api/LifespanHandler.md#_onaftercreated)
   * [DoClose](api/LifespanHandler.md#doclose)
+  * [_OnAfterCreated](api/LifespanHandler.md#_onaftercreated)
   * [OnBeforeClose](api/LifespanHandler.md#onbeforeclose)
+  * [OnBeforePopup](api/LifespanHandler.md#onbeforepopup)
 * [LoadHandler (interface)](api/LoadHandler.md#loadhandler-interface)
   * [OnLoadingStateChange](api/LoadHandler.md#onloadingstatechange)
   * [OnLoadStart](api/LoadHandler.md#onloadstart)
@@ -663,6 +683,7 @@ Additional information for v31.2 release:
   * [OnPaint](api/RenderHandler.md#onpaint)
   * [OnCursorChange](api/RenderHandler.md#oncursorchange)
   * [OnScrollOffsetChanged](api/RenderHandler.md#onscrolloffsetchanged)
+  * [OnTextSelectionChanged](api/RenderHandler.md#ontextselectionchanged)
   * [StartDragging](api/RenderHandler.md#startdragging)
   * [UpdateDragCursor](api/RenderHandler.md#updatedragcursor)
 * [Request (class)](api/Request.md#request-class)
@@ -685,19 +706,21 @@ Additional information for v31.2 release:
   * [GetResourceType](api/Request.md#getresourcetype)
   * [GetTransitionType](api/Request.md#gettransitiontype)
 * [RequestHandler (interface)](api/RequestHandler.md#requesthandler-interface)
-  * [OnBeforeBrowse](api/RequestHandler.md#onbeforebrowse)
-  * [OnBeforeResourceLoad](api/RequestHandler.md#onbeforeresourceload)
+  * [CanGetCookies](api/RequestHandler.md#cangetcookies)
+  * [CanSetCookie](api/RequestHandler.md#cansetcookie)
+  * [GetAuthCredentials](api/RequestHandler.md#getauthcredentials)
+  * [GetCookieManager](api/RequestHandler.md#getcookiemanager)
   * [GetResourceHandler](api/RequestHandler.md#getresourcehandler)
+  * [OnBeforeBrowse](api/RequestHandler.md#onbeforebrowse)
+  * [_OnBeforePluginLoad](api/RequestHandler.md#_onbeforepluginload)
+  * [OnBeforeResourceLoad](api/RequestHandler.md#onbeforeresourceload)
+  * [_OnCertificateError](api/RequestHandler.md#_oncertificateerror)
+  * [OnQuotaRequest](api/RequestHandler.md#onquotarequest)
   * [OnResourceRedirect](api/RequestHandler.md#onresourceredirect)
   * [OnResourceResponse](api/RequestHandler.md#onresourceresponse)
-  * [GetAuthCredentials](api/RequestHandler.md#getauthcredentials)
-  * [OnQuotaRequest](api/RequestHandler.md#onquotarequest)
-  * [GetCookieManager](api/RequestHandler.md#getcookiemanager)
-  * [OnProtocolExecution](api/RequestHandler.md#onprotocolexecution)
-  * [_OnBeforePluginLoad](api/RequestHandler.md#_onbeforepluginload)
-  * [_OnCertificateError](api/RequestHandler.md#_oncertificateerror)
-  * [OnRendererProcessTerminated](api/RequestHandler.md#onrendererprocessterminated)
   * [OnPluginCrashed](api/RequestHandler.md#onplugincrashed)
+  * [OnProtocolExecution](api/RequestHandler.md#onprotocolexecution)
+  * [OnRendererProcessTerminated](api/RequestHandler.md#onrendererprocessterminated)
 * [ResourceHandler (interface)](api/ResourceHandler.md#resourcehandler-interface)
   * [ProcessRequest](api/ResourceHandler.md#processrequest)
   * [GetResponseHeaders](api/ResourceHandler.md#getresponseheaders)

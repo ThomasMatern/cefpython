@@ -134,6 +134,8 @@ import datetime
 import random
 # noinspection PyUnresolvedReferences
 import struct
+# noinspection PyUnresolvedReferences
+import base64
 
 # Must use compile-time condition instead of checking sys.version_info.major
 # otherwise results in "ImportError: cannot import name urlencode" strange
@@ -300,6 +302,7 @@ from main_message_loop cimport *
 # noinspection PyUnresolvedReferences
 from cef_views cimport *
 from cef_log cimport *
+from cef_file_util cimport *
 
 # -----------------------------------------------------------------------------
 # GLOBAL VARIABLES
@@ -312,6 +315,7 @@ g_debug = False
 # The string_encoding key must be set early here and also in Initialize.
 g_applicationSettings = {"string_encoding": "utf-8"}
 g_commandLineSwitches = {}
+g_browser_settings = {}
 
 # If ApplicationSettings.unique_request_context_per_browser is False
 # then a shared request context is used for all browsers. Otherwise
@@ -329,6 +333,7 @@ cdef dict g_globalClientCallbacks = {}
 
 # -----------------------------------------------------------------------------
 
+include "cef_types.pyx"
 include "utils.pyx"
 include "string_utils.pyx"
 IF UNAME_SYSNAME == "Windows":
@@ -368,13 +373,10 @@ include "command_line.pyx"
 include "app.pyx"
 include "drag_data.pyx"
 include "helpers.pyx"
-
-# Currently used only on Linux via DragData. Do not include on other
-# platforms otherwise warning about unused function appears.
-IF UNAME_SYSNAME == "Linux":
-    include "image.pyx"
+include "image.pyx"
 
 # Handlers
+include "handlers/accessibility_handler.pyx"
 include "handlers/browser_process_handler.pyx"
 include "handlers/display_handler.pyx"
 include "handlers/focus_handler.pyx"
@@ -728,9 +730,12 @@ def CreateBrowserSync(windowInfo=None,
     if window_title and windowInfo.parentWindowHandle == 0:
         windowInfo.windowName = window_title
 
+    # Browser settings
     if not browserSettings:
         browserSettings = {}
-
+    # CEF Python only settings
+    if "inherit_client_handlers_for_popups" not in browserSettings:
+        browserSettings["inherit_client_handlers_for_popups"] = True
     cdef CefBrowserSettings cefBrowserSettings
     SetBrowserSettings(browserSettings, &cefBrowserSettings)
 
@@ -780,6 +785,15 @@ def CreateBrowserSync(windowInfo=None,
 
     Debug("CefBrowser window handle = "
           +str(<uintptr_t>cefBrowser.get().GetHost().get().GetWindowHandle()))
+
+    # Make a copy as browserSettings is a reference only that might
+    # get destroyed later.
+    global g_browser_settings
+    cdef int browser_id = cefBrowser.get().GetIdentifier()
+    g_browser_settings[browser_id] = {}
+    for key in browserSettings:
+        g_browser_settings[browser_id][key] =\
+            copy.deepcopy(browserSettings[key])
 
     # Request context - part 2/2.
     if g_applicationSettings["unique_request_context_per_browser"]:
@@ -963,11 +977,31 @@ def SetOsModalLoop(py_bool modalLoop):
 
 cpdef py_void SetGlobalClientCallback(py_string name, object callback):
     global g_globalClientCallbacks
-    if name in ["OnCertificateError", "OnBeforePluginLoad", "OnAfterCreated"]:
+    # Global callbacks are prefixed with "_" in documentation.
+    # Accept both with and without a prefix.
+    if name.startswith("_"):
+        name = name[1:]
+    if name in ["OnCertificateError", "OnBeforePluginLoad", "OnAfterCreated",
+                "OnAccessibilityTreeChange", "OnAccessibilityLocationChange"]:
         g_globalClientCallbacks[name] = callback
     else:
         raise Exception("SetGlobalClientCallback() failed: "\
                 "invalid callback name = %s" % name)
+
+cpdef py_void SetGlobalClientHandler(object clientHandler):
+    if not hasattr(clientHandler, "__class__"):
+        raise Exception("SetGlobalClientHandler() failed: __class__ "
+                        "attribute missing")
+    cdef dict methods = {}
+    cdef py_string key
+    cdef object method
+    cdef tuple value
+    for value in inspect.getmembers(clientHandler,
+            predicate=inspect.ismethod):
+        key = value[0]
+        method = value[1]
+        if key and key[0:2] != '__':
+            SetGlobalClientCallback(key, method)
 
 cpdef object GetGlobalClientCallback(py_string name):
     global g_globalClientCallbacks
@@ -994,3 +1028,12 @@ cpdef dict GetVersion():
         cef_commit_hash=__cef_commit_hash__,
         cef_commit_number=__cef_commit_number__,
     )
+
+cpdef LoadCrlSetsFile(py_string path):
+    CefLoadCRLSetsFile(PyToCefStringValue(path))
+
+cpdef GetDataUrl(data, mediatype="html"):
+    html = data.encode("utf-8", "replace")
+    b64 = base64.b64encode(html).decode("utf-8", "replace")
+    ret = "data:text/html;base64,{data}".format(data=b64)
+    return ret

@@ -3,7 +3,8 @@
 # Project website: https://github.com/cztomczak/cefpython
 
 """
-Run all examples that can be run on current configuration.
+Run all examples that can be run on current configuration
+and display a summary at the end.
 
 Note on GTK 2 / GTK 3 on Windows:
     Installing both PyGTK and PyGI on Windows will cause errors.
@@ -78,7 +79,10 @@ def main():
         passed.append("gtk3.py")
 
     # pyqt4
-    if packages["PyQt4"]:
+    if LINUX:
+        print("[run_examples.py] PASS: qt.py pyqt4 (Issue #452)")
+        passed.append("qt.py pyqt4 (Issue #452)")
+    elif packages["PyQt4"]:
         examples.append("qt.py pyqt4")
     else:
         print("[run_examples.py] PASS: qt.py pyqt4 (PyQt4 not installed)")
@@ -92,7 +96,10 @@ def main():
         passed.append("qt.py pyqt5")
 
     # pyside
-    if packages["PySide"]:
+    if LINUX:
+        print("[run_examples.py] PASS: qt.py pyside (Issue #452)")
+        passed.append("qt.py pyside (Issue #452)")
+    elif packages["PySide"]:
         examples.append("qt.py pyside")
     else:
         print("[run_examples.py] PASS: qt.py pyside (PySide not installed)")
@@ -103,6 +110,9 @@ def main():
         # This example often crashes on Mac (Issue #309)
         print("[run_examples.py] PASS: tkinter_.py (Issue #309)")
         passed.append("tkinter_.py (Issue #309)")
+    elif WINDOWS and sys.version_info.major == 2:
+        print("[run_examples.py] PASS: tkinter_.py (Issue #441)")
+        passed.append("tkinter_.py (Issue #441)")
     elif packages["tkinter"] or packages["Tkinter"]:
         examples.append("tkinter_.py")
     else:
@@ -179,8 +189,12 @@ def check_installed_packages():
     }
     for package in packages:
         try:
-            importlib.import_module(package)
-            packages[package] = True
+            if package == "PyQt5":
+                # Strange issue on Mac, PyQt5 is an empty built-in module
+                from PyQt5 import QtGui
+            else:
+                importlib.import_module(package)
+                packages[package] = True
         except ImportError:
             packages[package] = False
     packages["gi"] = check_gi_installed()

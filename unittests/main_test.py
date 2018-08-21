@@ -7,15 +7,14 @@
 import unittest
 # noinspection PyUnresolvedReferences
 import _test_runner
-from os.path import basename
+from _common import *
+
 from cefpython3 import cefpython as cef
-import time
-import base64
+
+import glob
 import os
 import sys
 
-# To show the window for an extended period of time increase this number.
-MESSAGE_LOOP_RANGE = 200  # each iteration is 0.01 sec
 
 g_datauri_data = """
 <!DOCTYPE html>
@@ -26,6 +25,10 @@ g_datauri_data = """
         font-family: Arial;
         font-size: 11pt;
     }
+    body {
+        width: 810px;
+        heiht: 610px;
+    }
     </style>
     <script>
     function print(msg) {
@@ -34,9 +37,17 @@ g_datauri_data = """
         msg = msg.replace("error", "<b style='color:red'>error</b>");
         document.getElementById("console").innerHTML += msg+"<br>";
     }
-    window.onload = function(){
-        print("window.onload() ok");
-
+    function onload_helper() {
+        if (!window.hasOwnProperty("cefpython_version")) {
+            // Sometimes page could finish loading before javascript
+            // bindings are available. Javascript bindings are sent
+            // from the browser process to the renderer process via
+            // IPC messaging and it can take some time (5-10ms). If
+            // the page loads very fast window.onload could execute
+            // before bindings are available.
+            setTimeout(onload_helper, 10);
+            return;
+        }
         version = cefpython_version
         print("CEF Python: <b>"+version.version+"</b>");
         print("Chrome: <b>"+version.chrome_version+"</b>");
@@ -81,7 +92,17 @@ g_datauri_data = """
             py_callback("String sent from Javascript");
             print("py_callback() ok");
         });
-    };
+
+        // Test popup
+        window.open("about:blank");
+
+        // Done
+        js_code_completed();
+    }
+    window.onload = function() {
+        print("window.onload() ok");
+        onload_helper();
+    }
     </script>
 </head>
 <body>
@@ -91,25 +112,14 @@ g_datauri_data = """
 </body>
 </html>
 """
-g_datauri = "data:text/html;base64,"+base64.b64encode(g_datauri_data.encode(
-        "utf-8", "replace")).decode("utf-8", "replace")
-
-g_subtests_ran = 0
-
-
-def subtest_message(message):
-    global g_subtests_ran
-    g_subtests_ran += 1
-    print(str(g_subtests_ran) + ". " + message)
-    sys.stdout.flush()
+g_datauri = cef.GetDataUrl(g_datauri_data)
 
 
 class MainTest_IsolatedTest(unittest.TestCase):
-
     def test_main(self):
-        """Main entry point."""
-        # All this code must run inside one single test, otherwise strange
-        # things happen.
+        """Main entry point. All the code must run inside one
+        single test, otherwise strange things happen."""
+
         print("")
         print("CEF Python {ver}".format(ver=cef.__version__))
         print("Python {ver}".format(ver=sys.version[:6]))
@@ -120,33 +130,85 @@ class MainTest_IsolatedTest(unittest.TestCase):
             "log_severity": cef.LOGSEVERITY_ERROR,
             "log_file": "",
         }
+        if not LINUX:
+            # On Linux you get a lot of "X error received" messages
+            # from Chromium's "x11_util.cc", so do not show them.
+            settings["log_severity"] = cef.LOGSEVERITY_WARNING
         if "--debug" in sys.argv:
             settings["debug"] = True
             settings["log_severity"] = cef.LOGSEVERITY_INFO
+        if "--debug-warning" in sys.argv:
+            settings["debug"] = True
+            settings["log_severity"] = cef.LOGSEVERITY_WARNING
         cef.Initialize(settings)
         subtest_message("cef.Initialize() ok")
 
-        # Test global handler
+        # CRL set file
+        certrevoc_dir = ""
+        if WINDOWS:
+            certrevoc_dir = r"C:\localappdata\Google\Chrome\User Data" \
+                            r"\CertificateRevocation"
+        elif LINUX:
+            certrevoc_dir = r"/home/*/.config/google-chrome" \
+                            r"/CertificateRevocation"
+        elif MAC:
+            certrevoc_dir = r"/Users/*/Library/Application Support/Google" \
+                            r"/Chrome/CertificateRevocation"
+        crlset_files = glob.iglob(os.path.join(certrevoc_dir, "*",
+                                               "crl-set"))
+        crlset = ""
+        for crlset in crlset_files:
+            pass
+        if os.path.exists(crlset):
+            cef.LoadCrlSetsFile(crlset)
+            subtest_message("cef.LoadCrlSetsFile ok")
+
+        # High DPI on Windows
+        if WINDOWS:
+            self.assertIsInstance(cef.DpiAware.GetSystemDpi(), tuple)
+            window_size = cef.DpiAware.CalculateWindowSize(800, 600)
+            self.assertIsInstance(window_size, tuple)
+            self.assertGreater(window_size[0], 0)
+            self.assertGreater(cef.DpiAware.Scale((800, 600))[0], 0)
+            cef.DpiAware.EnableHighDpiSupport()
+            self.assertTrue(cef.DpiAware.IsProcessDpiAware())
+            # Make some calls again after DPI Aware was set
+            self.assertIsInstance(cef.DpiAware.GetSystemDpi(), tuple)
+            self.assertGreater(cef.DpiAware.Scale([800, 600])[0], 0)
+            self.assertIsInstance(cef.DpiAware.Scale(800), int)
+            self.assertGreater(cef.DpiAware.Scale(800), 0)
+            subtest_message("cef.DpiAware ok")
+
+        # Global handler
         global_handler = GlobalHandler(self)
         cef.SetGlobalClientCallback("OnAfterCreated",
                                     global_handler._OnAfterCreated)
         subtest_message("cef.SetGlobalClientCallback() ok")
 
-        # Test creation of browser
-        browser = cef.CreateBrowserSync(url=g_datauri)
+        # Create browser
+        browser_settings = {
+            "inherit_client_handlers_for_popups": False,
+        }
+        browser = cef.CreateBrowserSync(url=g_datauri,
+                                        settings=browser_settings)
         self.assertIsNotNone(browser, "Browser object")
+        browser.SetFocus(True)
         subtest_message("cef.CreateBrowserSync() ok")
 
-        # Test other handlers: LoadHandler, DisplayHandler etc.
-        client_handlers = [LoadHandler(self), DisplayHandler(self)]
+        # Client handlers
+        display_handler2 = DisplayHandler2(self)
+        client_handlers = [LoadHandler(self, g_datauri),
+                           DisplayHandler(self),
+                           display_handler2]
         for handler in client_handlers:
             browser.SetClientHandler(handler)
         subtest_message("browser.SetClientHandler() ok")
 
-        # Test javascript bindings
+        # Javascript bindings
         external = External(self)
         bindings = cef.JavascriptBindings(
                 bindToFrames=False, bindToPopups=False)
+        bindings.SetFunction("js_code_completed", js_code_completed)
         bindings.SetFunction("test_function", external.test_function)
         bindings.SetProperty("test_property1", external.test_property1)
         bindings.SetProperty("test_property2", external.test_property2)
@@ -154,13 +216,21 @@ class MainTest_IsolatedTest(unittest.TestCase):
         # supports passing functions as callbacks when called from
         # javascript, and as a side effect any value and in this case
         # a property can also be a function.
-        bindings.SetProperty("test_property3_function", external.test_property3_function)
+        bindings.SetProperty("test_property3_function",
+                             external.test_property3_function)
         bindings.SetProperty("cefpython_version", cef.GetVersion())
         bindings.SetObject("external", external)
         browser.SetJavascriptBindings(bindings)
         subtest_message("browser.SetJavascriptBindings() ok")
 
+        # Set auto resize. Call it after js bindings were set.
+        browser.SetAutoResizeEnabled(enabled=True,
+                                     min_size=[800, 600],
+                                     max_size=[1024, 768])
+        subtest_message("browser.SetAutoResizeEnabled() ok")
+
         # Test Request.SetPostData(list)
+        # noinspection PyArgumentList
         req = cef.Request.CreateRequest()
         req_file = os.path.dirname(os.path.abspath(__file__))
         req_file = os.path.join(req_file, "main_test.py")
@@ -173,6 +243,7 @@ class MainTest_IsolatedTest(unittest.TestCase):
         subtest_message("cef.Request.SetPostData(list) ok")
 
         # Test Request.SetPostData(dict)
+        # noinspection PyArgumentList
         req = cef.Request.CreateRequest()
         req_data = {b"key": b"value"}
         req.SetMethod("POST")
@@ -180,150 +251,89 @@ class MainTest_IsolatedTest(unittest.TestCase):
         self.assertEqual(req_data, req.GetPostData())
         subtest_message("cef.Request.SetPostData(dict) ok")
 
-        # Run message loop for some time.
-        # noinspection PyTypeChecker
-        for i in range(MESSAGE_LOOP_RANGE):
-            cef.MessageLoopWork()
-            time.sleep(0.01)
-        subtest_message("cef.MessageLoopWork() ok")
+        # Cookie manager
+        self.assertIsInstance(cef.CookieManager.CreateManager(path=""),
+                              cef.PyCookieManager)
+        self.assertIsInstance(cef.CookieManager.GetGlobalManager(),
+                              cef.PyCookieManager)
+        self.assertIsInstance(cef.CookieManager.GetBlockingManager(),
+                              cef.PyCookieManager)
+        subtest_message("cef.CookieManager ok")
 
-        # Test browser closing. Remember to clean reference.
+        # Window Utils
+        if WINDOWS:
+            hwnd = 1  # When using 0 getting issues with OnautoResize
+            self.assertFalse(cef.WindowUtils.IsWindowHandle(hwnd))
+            cef.WindowUtils.OnSetFocus(hwnd, 0, 0, 0)
+            cef.WindowUtils.OnSize(hwnd, 0, 0, 0)
+            cef.WindowUtils.OnEraseBackground(hwnd, 0, 0, 0)
+            cef.WindowUtils.GetParentHandle(hwnd)
+            cef.WindowUtils.SetTitle(browser, "Main test")
+            subtest_message("cef.WindowUtils ok")
+        elif LINUX:
+            cef.WindowUtils.InstallX11ErrorHandlers()
+            subtest_message("cef.WindowUtils ok")
+        elif MAC:
+            hwnd = 0
+            cef.WindowUtils.GetParentHandle(hwnd)
+            cef.WindowUtils.IsWindowHandle(hwnd)
+            subtest_message("cef.WindowUtils ok")
+
+        # Run message loop
+        run_message_loop()
+
+        # Make sure popup browser was destroyed
+        self.assertIsInstance(cef.GetBrowserByIdentifier(MAIN_BROWSER_ID),
+                              cef.PyBrowser)
+        self.assertIsNone(cef.GetBrowserByIdentifier(POPUP_BROWSER_ID))
+        subtest_message("cef.GetBrowserByIdentifier() ok")
+
+        # Close browser and clean reference
         browser.CloseBrowser(True)
         del browser
         subtest_message("browser.CloseBrowser() ok")
 
-        # Give it some time to close before calling shutdown.
-        # noinspection PyTypeChecker
-        for i in range(25):
-            cef.MessageLoopWork()
-            time.sleep(0.01)
+        # Give it some time to close before checking asserts
+        # and calling shutdown.
+        do_message_loop_work(25)
 
-        # Automatic check of asserts in handlers and in external
-        for obj in [] + client_handlers + [global_handler, external]:
-            test_for_True = False  # Test whether asserts are working correctly
-            for key, value in obj.__dict__.items():
-                if key == "test_for_True":
-                    test_for_True = True
-                    continue
-                if "_True" in key:
-                    self.assertTrue(value, "Check assert: " +
-                                    obj.__class__.__name__ + "." + key)
-                    subtest_message(obj.__class__.__name__ + "." +
-                                    key.replace("_True", "") +
-                                    " ok")
-                elif "_False" in key:
-                    self.assertFalse(value, "Check assert: " +
-                                     obj.__class__.__name__ + "." + key)
-                    subtest_message(obj.__class__.__name__ + "." +
-                                    key.replace("_False", "") +
-                                    " ok")
-            self.assertTrue(test_for_True)
+        # Asserts before shutdown
+        self.assertEqual(display_handler2.OnLoadingProgressChange_Progress,
+                         1.0)
+        # noinspection PyTypeChecker
+        check_auto_asserts(self, [] + client_handlers
+                                    + [global_handler,
+                                       external])
 
         # Test shutdown of CEF
         cef.Shutdown()
         subtest_message("cef.Shutdown() ok")
 
-        # Display real number of tests there were run
-        print("\nRan " + str(g_subtests_ran) + " sub-tests in test_main")
+        # Display summary
+        show_test_summary(__file__)
         sys.stdout.flush()
 
 
-class GlobalHandler(object):
+class DisplayHandler2(object):
     def __init__(self, test_case):
         self.test_case = test_case
+        # Asserts for True/False will be checked just before shutdown.
+        # Test whether asserts are working correctly.
+        self.test_for_True = True
+        self.OnAutoResize_True = False
+        self.OnLoadingProgressChange_True = False
+        self.OnLoadingProgressChange_Progress = 0.0
 
-        # Asserts for True/False will be checked just before shutdown
-        self.test_for_True = True  # Test whether asserts are working correctly
-        self.OnAfterCreated_True = False
+    def OnAutoResize(self, new_size, **_):
+        self.OnAutoResize_True = True
+        self.test_case.assertGreaterEqual(new_size[0], 800)
+        self.test_case.assertLessEqual(new_size[0], 1024)
+        self.test_case.assertGreaterEqual(new_size[1], 600)
+        self.test_case.assertLessEqual(new_size[1], 768)
 
-    def _OnAfterCreated(self, browser, **_):
-        # For asserts that are checked automatically before shutdown its
-        # values should be set first, so that when other asserts fail
-        # (the ones called through the test_case member) they are reported
-        # correctly.
-        self.test_case.assertFalse(self.OnAfterCreated_True)
-        self.OnAfterCreated_True = True
-        self.test_case.assertEqual(browser.GetIdentifier(), 1)
-
-
-class LoadHandler(object):
-    def __init__(self, test_case):
-        self.test_case = test_case
-        self.frame_source_visitor = None
-
-        # Asserts for True/False will be checked just before shutdown
-        self.test_for_True = True  # Test whether asserts are working correctly
-        self.OnLoadStart_True = False
-        self.OnLoadEnd_True = False
-        self.FrameSourceVisitor_True = False
-        # self.OnLoadingStateChange_Start_True = False # FAILS
-        self.OnLoadingStateChange_End_True = False
-
-    def OnLoadStart(self, browser, frame, **_):
-        self.test_case.assertFalse(self.OnLoadStart_True)
-        self.OnLoadStart_True = True
-        self.test_case.assertEqual(browser.GetUrl(), frame.GetUrl())
-        self.test_case.assertEqual(browser.GetUrl(), g_datauri)
-
-    def OnLoadEnd(self, browser, frame, http_code, **_):
-        # OnLoadEnd should be called only once
-        self.test_case.assertFalse(self.OnLoadEnd_True)
-        self.OnLoadEnd_True = True
-        self.test_case.assertEqual(http_code, 200)
-        self.frame_source_visitor = FrameSourceVisitor(self, self.test_case)
-        frame.GetSource(self.frame_source_visitor)
-        browser.ExecuteJavascript("print('LoadHandler.OnLoadEnd() ok')")
-
-    def OnLoadingStateChange(self, browser, is_loading, can_go_back,
-                             can_go_forward, **_):
-        if is_loading:
-            # TODO: this test fails, looks like OnLoadingStaetChange with
-            #       is_loading=False is being called very fast, before
-            #       OnLoadStart and before client handler is set by calling
-            #       browser.SetClientHandler().
-            #       SOLUTION: allow to set OnLoadingStateChange through
-            #       SetGlobalClientCallback similarly to _OnAfterCreated().
-            # self.test_case.assertFalse(self.OnLoadingStateChange_Start_True)
-            # self.OnLoadingStateChange_Start_True = True
-            pass
-        else:
-            self.test_case.assertFalse(self.OnLoadingStateChange_End_True)
-            self.OnLoadingStateChange_End_True = True
-            self.test_case.assertEqual(browser.CanGoBack(), can_go_back)
-            self.test_case.assertEqual(browser.CanGoForward(), can_go_forward)
-
-
-class DisplayHandler(object):
-    def __init__(self, test_case):
-        self.test_case = test_case
-
-        # Asserts for True/False will be checked just before shutdown
-        self.test_for_True = True  # Test whether asserts are working correctly
-        self.javascript_errors_False = False
-        self.OnConsoleMessage_True = False
-
-    def OnConsoleMessage(self, message, **_):
-        if "error" in message.lower() or "uncaught" in message.lower():
-            self.javascript_errors_False = True
-            raise Exception(message)
-        else:
-            # Check whether messages from javascript are coming
-            self.OnConsoleMessage_True = True
-            subtest_message(message)
-
-
-class FrameSourceVisitor(object):
-    """Visitor for Frame.GetSource()."""
-
-    def __init__(self, load_handler, test_case):
-        self.load_handler = load_handler
-        self.test_case = test_case
-
-    def Visit(self, **_):
-        self.test_case.assertFalse(self.load_handler.FrameSourceVisitor_True)
-        self.load_handler.FrameSourceVisitor_True = True
-        self.test_case.assertIn("747ef3e6011b6a61e6b3c6e54bdd2dee",
-                                g_datauri_data)
+    def OnLoadingProgressChange(self, progress, **_):
+        self.OnLoadingProgressChange_True = True
+        self.OnLoadingProgressChange_Progress = progress
 
 
 class External(object):
@@ -363,4 +373,4 @@ class External(object):
 
 
 if __name__ == "__main__":
-    _test_runner.main(basename(__file__))
+    _test_runner.main(os.path.basename(__file__))

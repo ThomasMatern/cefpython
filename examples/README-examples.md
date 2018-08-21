@@ -3,6 +3,11 @@
 Table of contents:
 * [Hello World!](#hello-world)
 * [Supported examples](#supported-examples)
+  * [Featured](#featured)
+  * [Snippets](#snippets)
+  * [GUI frameworks](#gui-frameworks)
+  * [Build executable with PyInstaller](#build-executable-with-pyinstaller)
+  * [Unit tests](#unit-tests)
 * [Other examples](#other-examples)
 * [More examples to come](#more-examples-to-come)
 
@@ -12,7 +17,7 @@ Instructions to install the cefpython3 package, clone the repository
 and run the hello_world.py example:
 
 ```
-pip install cefpython3==57.0
+pip install cefpython3==66.0
 git clone https://github.com/cztomczak/cefpython.git
 cd cefpython/examples/
 python hello_world.py
@@ -27,7 +32,7 @@ in sources to see whether this is a known issue with available
 workarounds.
 
 
-**Featured**
+### Featured
 
 - [hello_world.py](hello_world.py) - Basic example, doesn't require any
   third party GUI framework to run
@@ -38,7 +43,31 @@ workarounds.
   section.
 
 
-**Embedding using various GUI frameworks**
+### Snippets
+
+See small code snippets that show various CEF features in the
+[examples/snippets/](snippets/) directory:
+
+- [javascript_bindings.py](snippets/javascript_bindings.py) - Communicate
+    between Python and Javascript asynchronously using
+    inter-process messaging with the use of Javascript Bindings.
+- [javascript_errors.py](snippets/javascript_errors.py) - Two ways for
+    intercepting Javascript errors.
+- [mouse_clicks.py](snippets/mouse_clicks.py) - Perform mouse clicks
+    and mouse movements programmatically.
+- [network_cookies.py](snippets/network_cookies.py) - Implement
+    interfaces to block or allow cookies over network requests.
+- [onbeforeclose.py](snippets/onbeforeclose.py) - Implement interface
+    to execute custom code before browser window closes.
+- [ondomready.py](snippets/ondomready.py) - Execute custom Python code
+    on a web page as soon as DOM is ready.
+- [onpagecomplete.py](snippets/onpagecomplete.py) - Execute custom
+    Python code on a web page when page loading is complete.
+
+
+### GUI frameworks
+
+Examples of embedding CEF browser using various GUI frameworks:
 
 - [gtk2.py](gtk2.py): example for [PyGTK](http://www.pygtk.org/)
   library (GTK 2)
@@ -51,24 +80,28 @@ workarounds.
   library
 - [qt.py](qt.py): example for [PyQt4](https://wiki.python.org/moin/PyQt4),
   [PyQt5](https://pypi.python.org/pypi/PyQt5)
-  and [PySide](https://wiki.qt.io/PySide) libraries
+  and [PySide](https://wiki.qt.io/PySide) libraries.
+  PyQt4 and PySide examples are currently broken on Linux, see
+  [Issue #452](../../../issues/452).
 - [tkinter_.py](tkinter_.py): example for [Tkinter](https://wiki.python.org/moin/TkInter).
   Currently broken on Mac ([#309](../../../issues/309)).
 - [wxpython.py](wxpython.py): example for [wxPython](https://wxpython.org/)
-  toolkit
+  toolkit. This example implements High DPI support on Windows.
 
 
-**Build executable using Python packagers**
+### Build executable with PyInstaller
 
 - [PyInstaller example](pyinstaller/README-pyinstaller.md):
   example of packaging app using [PyInstaller](http://www.pyinstaller.org/)
-  packager
+  packager. Currently this example supports only Windows platform.
 
 
-**Unit tests**
+### Unit tests
 
 There are also available unit tests and its usage of the API can
-be of some use. See [main_test.py](../unittests/main_test.py).
+be of some use. See:
+- [main_test.py](../unittests/main_test.py) - windowed rendering general tests
+- [osr_test.py](../unittests/osr_test.py) - off-screen rendering tests
 
 
 ## Other examples
@@ -90,6 +123,7 @@ yet ported to latest CEF. Some of them are externally maintained.
   example in the cefpython31 branch.
 - Example of using Python network library (urllib3/openssl) instead of Chromium's
   network library - see [gist by Massimiliano Dal Cero](https://gist.github.com/yattamax/0252a3c5dc54a2f81650d5c0eafabf99)
+- Example of passing exceptions from Python to Javascript and using await syntax to receive values from python return values - see [Managed python calls example by Elliot Woods](https://github.com/elliotwoods/cefpython-tests/tree/0180b22eac10a1bde08820ca192fdc30eb93f00d/6.%20Managed%20python%20calls)
 
 ## More examples to come
 

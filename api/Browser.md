@@ -45,6 +45,7 @@ Table of contents:
   * [GetNSTextInputContext](#getnstextinputcontext)
   * [GetOpenerWindowHandle](#getopenerwindowhandle)
   * [GetOuterWindowHandle](#getouterwindowhandle)
+  * [GetSetting](#getsetting)
   * [GetUrl](#geturl)
   * [GetUserData](#getuserdata)
   * [GetWindowHandle](#getwindowhandle)
@@ -54,7 +55,9 @@ Table of contents:
   * [GoForward](#goforward)
   * [HandleKeyEventAfterTextInputClient](#handlekeyeventaftertextinputclient)
   * [HandleKeyEventBeforeTextInputClient](#handlekeyeventbeforetextinputclient)
+  * [HasDevTools](#hasdevtools)
   * [HasDocument](#hasdocument)
+  * [Invalidate](#invalidate)
   * [IsFullscreen](#isfullscreen)
   * [IsLoading](#isloading)
   * [IsMouseCursorChangeDisabled](#ismousecursorchangedisabled)
@@ -69,6 +72,7 @@ Table of contents:
   * [Reload](#reload)
   * [ReloadIgnoreCache](#reloadignorecache)
   * [ReplaceMisspelling](#replacemisspelling)
+  * [SetAutoResizeEnabled](#setautoresizeenabled)
   * [SetBounds](#setbounds)
   * [SendKeyEvent](#sendkeyevent)
   * [SendMouseClickEvent](#sendmouseclickevent)
@@ -76,6 +80,7 @@ Table of contents:
   * [SendMouseWheelEvent](#sendmousewheelevent)
   * [SendFocusEvent](#sendfocusevent)
   * [SendCaptureLostEvent](#sendcapturelostevent)
+  * [SetAccessibilityState](#setaccessibilitystate)
   * [SetClientCallback](#setclientcallback)
   * [SetClientHandler](#setclienthandler)
   * [SetFocus](#setfocus)
@@ -427,7 +432,7 @@ Returns the names of all existing frames. This list does not include the main fr
 | --- | --- |
 | __Return__ | tuple(bytes buffer, int width, int height) |
 
-Currently works only on Linux (Issue [#427](../../../issues/427)).
+Currently available only on Linux (Issue [#427](../../../issues/427)).
 
 Get browser contents as image. Only screen visible contents are returned.
 
@@ -490,6 +495,17 @@ Retrieve the CEF-internal (inner or outer) window handle of the browser that ope
 | __Return__ | windowHandle |
 
 Get the most outer window handle.
+
+
+### GetSetting
+
+| Parameter | Type |
+| --- | --- |
+| key | str |
+| __Return__ | mixed |
+
+Get a browser setting. You can set browser settings by passing
+`settings` parameter to `cef.CreateBrowserSync`.
 
 
 ### GetUrl
@@ -581,6 +597,17 @@ Handles a keyDown event prior to passing it through the NSTextInputClient
 machinery.
 
 
+### HasDevTools
+
+| | |
+| --- | --- |
+| __Return__ | bool |
+
+Description from upstream CEF:
+> Returns true if this browser currently has an associated DevTools browser.
+> Must be called on the browser process UI thread.
+
+
 ### HasDocument
 
 | | |
@@ -588,6 +615,23 @@ machinery.
 | __Return__ | bool |
 
 Returns true if a document has been loaded in the browser.
+
+
+### Invalidate
+
+| | |
+| --- | --- |
+| element_type | PaintElementType |
+| __Return__ | void |
+
+Description from upstream CEF:
+> Invalidate the view. The browser will call CefRenderHandler::OnPaint
+> asynchronously. This method is only used when window rendering is
+> disabled.
+
+`PaintElementType` enum values defined in cefpython module:
+* PET_VIEW
+* PET_POPUP
 
 
 ### IsFullscreen
@@ -735,6 +779,21 @@ If a misspelled word is currently selected in an editable node calling
 this method will replace it with the specified |word|.
 
 
+### SetAutoResizeEnabled
+
+| Parameter | Type |
+| --- | --- |
+| enabled | bool |
+| min_size | list[width, height] |
+| max_size | list[width, heifght] |
+| __Return__ | void |
+
+Description from upstream CEF:
+> Enable notifications of auto resize via CefDisplayHandler::OnAutoResize.
+> Notifications are disabled by default. |min_size| and |max_size| define the
+> range of allowed sizes.
+
+
 ### SetBounds
 
 | Parameter | Type |
@@ -843,6 +902,44 @@ Send a focus event to the browser.
 
 Send a capture lost event to the browser.
 
+
+### SetAccessibilityState
+
+| | |
+| --- | --- |
+| state | cef_state_t |
+| __Return__ | void |
+
+cef_state_t enum values defined in cefpython module:
+- STATE_DEFAULT
+- STATE_ENABLED
+- STATE_DISABLED
+
+Description from upstream CEF:
+> Set accessibility state for all frames. |accessibility_state| may be
+> default, enabled or disabled. If |accessibility_state| is STATE_DEFAULT
+> then accessibility will be disabled by default and the state may be further
+> controlled with the "force-renderer-accessibility" and
+> "disable-renderer-accessibility" command-line switches. If
+> |accessibility_state| is STATE_ENABLED then accessibility will be enabled.
+> If |accessibility_state| is STATE_DISABLED then accessibility will be
+> completely disabled.
+>
+> For windowed browsers accessibility will be enabled in Complete mode (which
+> corresponds to kAccessibilityModeComplete in Chromium). In this mode all
+> platform accessibility objects will be created and managed by Chromium's
+> internal implementation. The client needs only to detect the screen reader
+> and call this method appropriately. For example, on macOS the client can
+> handle the @"AXEnhancedUserInterface" accessibility attribute to detect
+> VoiceOver state changes and on Windows the client can handle WM_GETOBJECT
+> with OBJID_CLIENT to detect accessibility readers.
+>
+> For windowless browsers accessibility will be enabled in TreeOnly mode
+> (which corresponds to kAccessibilityModeWebContentsOnly in Chromium). In
+> this mode renderer accessibility is enabled, the full tree is computed, and
+> events are passed to CefAccessibiltyHandler, but platform accessibility
+> objects are not created. The client may implement platform accessibility
+> objects using CefAccessibiltyHandler callbacks if desired.
 
 ### SetClientCallback
 

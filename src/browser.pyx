@@ -5,6 +5,7 @@
 include "cefpython.pyx"
 
 cimport cef_types
+from cef_types cimport cef_state_t
 IF UNAME_SYSNAME == "Linux":
     cimport x11
 
@@ -17,6 +18,8 @@ MOUSEBUTTON_RIGHT = cef_types.MBT_RIGHT
 # get segmentation faults, as they will be garbage collected.
 
 cdef dict g_pyBrowsers = {}
+
+# See also g_browser_settings defined in cefpython.pyx
 
 # Unreferenced browsers are added to this list in OnBeforeClose().
 # Must keep a list of unreferenced browsers so that a new reference
@@ -32,6 +35,20 @@ cdef PyBrowser GetPyBrowserById(int browserId):
     if browserId in g_pyBrowsers:
         return g_pyBrowsers[browserId]
     return None
+
+cdef py_bool IsBrowserClosed(CefRefPtr[CefBrowser] cefBrowser):
+    """Possibly fix Issue #455 by using this helper function to detect
+    if browser is closing/closed."""
+    # CefBrowser may sometimes be NULL e.g. Issue #429, Issue #454.
+    if not cefBrowser.get():
+        return True
+    if not cefBrowser.get().GetHost().get():
+        return True
+    cdef int browserId = cefBrowser.get().GetIdentifier()
+    if browserId in g_unreferenced_browsers \
+            or browserId in g_closed_browsers:
+        return True
+    return False
 
 cdef PyBrowser GetPyBrowser(CefRefPtr[CefBrowser] cefBrowser,
                                     callerIdStr="GetPyBrowser"):
@@ -107,9 +124,15 @@ cdef PyBrowser GetPyBrowser(CefRefPtr[CefBrowser] cefBrowser,
             openerHandle = pyBrowser.GetOpenerWindowHandle()
             for identifier, tempPyBrowser in g_pyBrowsers.items():
                 if tempPyBrowser.GetWindowHandle() == openerHandle:
-                    clientCallbacks = tempPyBrowser.GetClientCallbacksDict()
-                    if clientCallbacks:
-                        pyBrowser.SetClientCallbacksDict(clientCallbacks)
+                    # tempPyBrowser is a parent browser
+                    if tempPyBrowser.GetSetting("inherit_client_handlers_for_popups"):
+                        if pyBrowser.GetIdentifier() not in g_browser_settings:
+                            g_browser_settings[pyBrowser.GetIdentifier()] = {}
+                        g_browser_settings[pyBrowser.GetIdentifier()]["inherit_client_handlers_for_popups"] =\
+                            tempPyBrowser.GetSetting("inherit_client_handlers_for_popups")
+                        clientCallbacks = tempPyBrowser.GetClientCallbacksDict()
+                        if clientCallbacks:
+                            pyBrowser.SetClientCallbacksDict(clientCallbacks)
                     javascriptBindings = tempPyBrowser.GetJavascriptBindings()
                     if javascriptBindings:
                         if javascriptBindings.GetBindToPopups():
@@ -140,6 +163,15 @@ cpdef PyBrowser GetBrowserByWindowHandle(WindowHandle windowHandle):
         pyBrowser = g_pyBrowsers[browserId]
         if (pyBrowser.GetWindowHandle() == windowHandle or
                 pyBrowser.GetUserData("__outerWindowHandle") == windowHandle):
+            return pyBrowser
+    return None
+
+
+cpdef PyBrowser GetBrowserByIdentifier(int identifier):
+    cdef PyBrowser pyBrowser
+    for browserId in g_pyBrowsers:
+        pyBrowser = g_pyBrowsers[browserId]
+        if pyBrowser.GetIdentifier() == identifier:
             return pyBrowser
     return None
 
@@ -203,7 +235,8 @@ cdef class PyBrowser:
             # DisplayHandler
             self.allowedClientCallbacks += [
                     "OnAddressChange", "OnTitleChange", "OnTooltip",
-                    "OnStatusMessage", "OnConsoleMessage"]
+                    "OnStatusMessage", "OnConsoleMessage", "OnAutoResize",
+                    "OnLoadingProgressChange"]
             # KeyboardHandler
             self.allowedClientCallbacks += ["OnPreKeyEvent", "OnKeyEvent"]
             # RequestHandler
@@ -215,7 +248,7 @@ cdef class PyBrowser:
                     "OnQuotaRequest", "OnProtocolExecution",
                     "GetResourceHandler",
                     "OnBeforeBrowse", "OnRendererProcessTerminated",
-                    "OnPluginCrashed"]
+                    "OnPluginCrashed", "CanGetCookies", "CanSetCookie"]
             # RequestContextHandler
             self.allowedClientCallbacks += ["GetCookieManager"]
             # LoadHandler
@@ -232,7 +265,8 @@ cdef class PyBrowser:
                     "GetScreenRect",
                     "OnPopupShow", "OnPopupSize", "OnPaint", "OnCursorChange",
                     "OnScrollOffsetChanged",
-                    "StartDragging", "UpdateDragCursor"]
+                    "StartDragging", "UpdateDragCursor",
+                    "OnTextSelectionChanged"]
             # JavascriptDialogHandler
             self.allowedClientCallbacks += ["OnJavascriptDialog",
                     "OnBeforeUnloadJavascriptDialog",
@@ -308,6 +342,13 @@ cdef class PyBrowser:
             NonCriticalError("GetImage not implemented on this platform")
             return None
 
+    cpdef object GetSetting(self, py_string key):
+        cdef int browser_id = self.GetIdentifier()
+        if browser_id in g_browser_settings:
+            if key in g_browser_settings[browser_id]:
+                return g_browser_settings[browser_id][key]
+        return None
+
     # --------------
     # CEF API.
     # --------------
@@ -333,6 +374,17 @@ cdef class PyBrowser:
         # object and in such case lifespanHandler.OnBeforeClose
         # will be called.
         Debug("CefBrowser::CloseBrowser(%s)" % forceClose)
+
+        # Fix Issue #454 "Crash on exit when closing browser
+        #                 immediately during initial loading".
+        if not self.cefBrowser.get():
+            Debug("cefBrowser.get() failed in CloseBrowser")
+            return
+        # From testing it seems that only cefBrowser.get() can fail,
+        # however let's check the host as well just to be safe.
+        if not self.cefBrowser.get().GetHost().get():
+            Debug("cefBrowser.get().GetHost() failed in CloseBrowser")
+            return
 
         # Flush cookies to disk. Temporary solution for Issue #365.
         # A similar call is made in LifespanHandler_OnBeforeClose.
@@ -447,8 +499,15 @@ cdef class PyBrowser:
     cpdef py_void GoForward(self):
         self.GetCefBrowser().get().GoForward()
 
+    cpdef py_bool HasDevTools(self):
+        return self.GetCefBrowserHost().get().HasDevTools()
+
     cpdef py_bool HasDocument(self):
         return self.GetCefBrowser().get().HasDocument()
+
+    cpdef py_void Invalidate(self,
+                             cef_types.cef_paint_element_type_t element_type):
+        return self.GetCefBrowserHost().get().Invalidate(element_type)
 
     cpdef py_bool IsFullscreen(self):
         return bool(self.isFullscreen)
@@ -482,11 +541,25 @@ cdef class PyBrowser:
         PyToCefString(word, cef_word)
         self.GetCefBrowserHost().get().ReplaceMisspelling(cef_word)
 
+    cpdef py_void SetAutoResizeEnabled(self,
+                                       py_bool enabled,
+                                       list min_size,
+                                       list max_size):
+        self.GetCefBrowserHost().get().SetAutoResizeEnabled(
+            bool(enabled),
+            CefSize(min_size[0], min_size[1]),
+            CefSize(max_size[0], max_size[1])
+        )
+
+
     cpdef py_void SetBounds(self, int x, int y, int width, int height):
         IF UNAME_SYSNAME == "Linux":
             x11.SetX11WindowBounds(self.GetCefBrowser(), x, y, width, height)
         ELSE:
             NonCriticalError("SetBounds() not implemented on this platform")
+
+    cpdef py_void SetAccessibilityState(self, cef_state_t state):
+        self.GetCefBrowserHost().get().SetAccessibilityState(state)
 
     cpdef py_void SetFocus(self, enable):
         self.GetCefBrowserHost().get().SetFocus(bool(enable))

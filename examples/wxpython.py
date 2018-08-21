@@ -5,16 +5,13 @@
 # - wxPython 4.0 on Windows/Mac/Linux
 # - wxPython 3.0 on Windows/Mac
 # - wxPython 2.8 on Linux
-# - CEF Python v55.4+
+# - CEF Python v66.0+
 
 import wx
 from cefpython3 import cefpython as cef
 import platform
 import sys
 import os
-
-# Fix for PyCharm hints warnings when using static methods
-WindowUtils = cef.WindowUtils()
 
 # Platforms
 WINDOWS = (platform.system() == "Windows")
@@ -33,8 +30,8 @@ if MAC:
         sys.exit(1)
 
 # Configuration
-WIDTH = 800
-HEIGHT = 600
+WIDTH = 900
+HEIGHT = 640
 
 # Globals
 g_count_windows = 0
@@ -68,24 +65,58 @@ def check_versions():
             ver=platform.python_version(), arch=platform.architecture()[0]))
     print("[wxpython.py] wxPython {ver}".format(ver=wx.version()))
     # CEF Python version requirement
-    assert cef.__version__ >= "55.3", "CEF Python v55.3+ required to run this"
+    assert cef.__version__ >= "66.0", "CEF Python v66.0+ required to run this"
+
+
+def scale_window_size_for_high_dpi(width, height):
+    """Scale window size for high DPI devices. This func can be
+    called on all operating systems, but scales only for Windows.
+    If scaled value is bigger than the work area on the display
+    then it will be reduced."""
+    if not WINDOWS:
+        return width, height
+    (_, _, max_width, max_height) = wx.GetClientDisplayRect().Get()
+    # noinspection PyUnresolvedReferences
+    (width, height) = cef.DpiAware.Scale((width, height))
+    if width > max_width:
+        width = max_width
+    if height > max_height:
+        height = max_height
+    return width, height
 
 
 class MainFrame(wx.Frame):
 
     def __init__(self):
-        wx.Frame.__init__(self, parent=None, id=wx.ID_ANY,
-                          title='wxPython example', size=(WIDTH, HEIGHT))
         self.browser = None
 
         # Must ignore X11 errors like 'BadWindow' and others by
         # installing X11 error handlers. This must be done after
         # wx was intialized.
         if LINUX:
-            WindowUtils.InstallX11ErrorHandlers()
+            cef.WindowUtils.InstallX11ErrorHandlers()
 
         global g_count_windows
         g_count_windows += 1
+
+        if WINDOWS:
+            # noinspection PyUnresolvedReferences, PyArgumentList
+            print("[wxpython.py] System DPI settings: %s"
+                  % str(cef.DpiAware.GetSystemDpi()))
+        if hasattr(wx, "GetDisplayPPI"):
+            print("[wxpython.py] wx.GetDisplayPPI = %s" % wx.GetDisplayPPI())
+        print("[wxpython.py] wx.GetDisplaySize = %s" % wx.GetDisplaySize())
+
+        print("[wxpython.py] MainFrame declared size: %s"
+              % str((WIDTH, HEIGHT)))
+        size = scale_window_size_for_high_dpi(WIDTH, HEIGHT)
+        print("[wxpython.py] MainFrame DPI scaled size: %s" % str(size))
+
+        wx.Frame.__init__(self, parent=None, id=wx.ID_ANY,
+                          title='wxPython example', size=size)
+        # wxPython will set a smaller size when it is bigger
+        # than desktop size.
+        print("[wxpython.py] MainFrame actual size: %s" % self.GetSize())
 
         self.setup_icon()
         self.create_menu()
@@ -140,7 +171,7 @@ class MainFrame(wx.Frame):
     def embed_browser(self):
         window_info = cef.WindowInfo()
         (width, height) = self.browser_panel.GetClientSize().Get()
-        assert self.browser_panel.GetHandle(), "Window handle not available yet"
+        assert self.browser_panel.GetHandle(), "Window handle not available"
         window_info.SetAsChild(self.browser_panel.GetHandle(),
                                [0, 0, width, height])
         self.browser = cef.CreateBrowserSync(window_info,
@@ -151,16 +182,16 @@ class MainFrame(wx.Frame):
         if not self.browser:
             return
         if WINDOWS:
-            WindowUtils.OnSetFocus(self.browser_panel.GetHandle(),
-                                   0, 0, 0)
+            cef.WindowUtils.OnSetFocus(self.browser_panel.GetHandle(),
+                                       0, 0, 0)
         self.browser.SetFocus(True)
 
     def OnSize(self, _):
         if not self.browser:
             return
         if WINDOWS:
-            WindowUtils.OnSize(self.browser_panel.GetHandle(),
-                               0, 0, 0)
+            cef.WindowUtils.OnSize(self.browser_panel.GetHandle(),
+                                   0, 0, 0)
         elif LINUX:
             (x, y) = (0, 0)
             (width, height) = self.browser_panel.GetSize().Get()

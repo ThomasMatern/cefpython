@@ -11,7 +11,7 @@ from libcpp cimport bool as cpp_bool
 from libcpp.vector cimport vector as cpp_vector
 from cef_frame cimport CefFrame
 cimport cef_types
-from cef_types cimport int64
+from cef_types cimport int64, cef_state_t, CefSize
 from cef_types cimport CefBrowserSettings, CefPoint
 from cef_drag_data cimport CefDragData
 from cef_types cimport CefMouseEvent
@@ -62,6 +62,7 @@ cdef extern from "include/cef_browser.h":
                           const CefBrowserSettings& settings,
                           const CefPoint& inspect_element_at)
         void CloseDevTools()
+        cpp_bool HasDevTools()
 
         CefRefPtr[CefRequestContext] GetRequestContext()
 
@@ -85,6 +86,12 @@ cdef extern from "include/cef_browser.h":
         # Spell checking
         void ReplaceMisspelling(const CefString& word)
         void AddWordToDictionary(const CefString& word)
+
+        void SetAccessibilityState(cef_state_t accessibility_state)
+        void Invalidate(cef_types.cef_paint_element_type_t element_type)
+        void SetAutoResizeEnabled(cpp_bool enabled,
+                                  const CefSize& min_size,
+                                  const CefSize& max_size)
 
 
     cdef cppclass CefBrowser:

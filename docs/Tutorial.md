@@ -9,7 +9,8 @@ basics. This tutorial will discuss the three featured examples:
 [hello_world.py](../examples/hello_world.py),
 [tutorial.py](../examples/tutorial.py)
 and [screenshot.py](../examples/screenshot.py). There are many
-more examples that you can find in the [README-examples.md](../examples/README-examples.md)
+more examples that you can find in the
+[README-examples.md](../examples/README-examples.md)
 file, but these examples are out of scope for this tutorial.
 
 
@@ -39,7 +40,7 @@ Run the commands below to install the cefpython3 package, clone
 the repository and run the Hello World example:
 
 ```commandline
-pip install cefpython3==57.0
+pip install cefpython3==66.0
 git clone https://github.com/cztomczak/cefpython.git
 cd cefpython/examples/
 python hello_world.py

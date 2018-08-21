@@ -70,6 +70,24 @@ MISC
 NEW FEATURES
 ------------
 
++ unittests/osr_test.py - new test for off-screen rendering mode
++ cefpython.SetGlobalClientHandler
++ Browser.Invalidate
++ CookieManager.FlushStore
++ BrowserSettings.inherit_client_handlers_for_popups
++ Browser.GetSetting
++ cefpython.GetBrowserByIdentifier
++ Browser.HasDevTools
++ examples/snippets/
+    + onbeforeclose.py
+    + network_cookies.py
+    + mouse_clicks.py
+    + javascript_bindings.py
+    + javascript_errors.py
+    + ondomready.py
+    + onpagecomplete
++ cef.GetDataUrl
+
 internal/cef_types.h
 + cef_log_severity_t: new key LOGSEVERITY_DEBUG (no need to expose,
   same as LOGSEVERITY_VERBOSE, see code comments in setting.pyx
@@ -81,29 +99,29 @@ internal/cef_types.h
 + cef_referrer_policy_t changes (not exposed, info only)
 
 cef_accessibility_handler.h
-- CefAccessibilityHandler
-- CefRenderHandler::GetAccessibilityHandler
++ CefAccessibilityHandler
++ CefRenderHandler::GetAccessibilityHandler
 
 cef_render_handler.h
-- OnTextSelectionChanged
++ OnTextSelectionChanged
 
 cef_browser.h
-- SetAccessibilityState
-- SetAutoResizeEnabled
++ SetAccessibilityState
++ SetAutoResizeEnabled
 - GetExtension
 - IsBackgroundHost
 
 cef_cookie.h
-- GetBlockingManager
++ GetBlockingManager
 
 cef_display_handler.h
-- OnAutoResize
-- OnLoadingProgressChange
++ OnAutoResize
++ OnLoadingProgressChange
 
 cef_drag_data.h
-- GetImage (cross-platform)
-- GetImageHotspot (cross-platform)
-- HasImage (cross-platform)
++ GetImage (cross-platform)
++ GetImageHotspot (cross-platform)
++ HasImage (cross-platform)
 
 cef_extension.h
 - CefExtension
@@ -125,11 +143,11 @@ cef_extension_handler.h
 - CefExtensionHandler
 
 cef_file_util.h
-- CefLoadCRLSetsFile
++ CefLoadCRLSetsFile
 
 cef_request_handler.h
-- CanGetCookies
-- CanSetCookie
++ CanGetCookies
++ CanSetCookie
 
 cef_response.h
 - GetURL
@@ -148,3 +166,6 @@ cef_v8.h
   - IsArrayBuffer
   - GetArrayBufferReleaseCallback
   - NeuterArrayBuffer
+
+cef_urlrequest.h
+- ResponseWasCached

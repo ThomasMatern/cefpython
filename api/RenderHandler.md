@@ -22,6 +22,7 @@ Table of contents:
   * [OnPaint](#onpaint)
   * [OnCursorChange](#oncursorchange)
   * [OnScrollOffsetChanged](#onscrolloffsetchanged)
+  * [OnTextSelectionChanged](#ontextselectionchanged)
   * [StartDragging](#startdragging)
   * [UpdateDragCursor](#updatedragcursor)
 
@@ -175,6 +176,25 @@ Called when the browser's cursor has changed. If |type| is CT_CUSTOM then
 | __Return__ | void |
 
 Called when the scroll offset has changed.
+
+
+### OnTextSelectionChanged
+
+| Parameter | Type |
+| --- | --- |
+| browser | [Browser](Browser.md) |
+| selected_text | str |
+| selected_range | list[x, y] |
+| __Return__ | void |
+
+Description from upstream CEF:
+> Called when text selection has changed for the specified |browser|.
+> |selected_text| is the currently selected text and |selected_range| is
+> the character range.
+
+NOTE: this callback seems to be called only when selecting text
+with a mouse. When selecting text programmatically using javascript
+code it doesn't get called.
 
 
 ### StartDragging
