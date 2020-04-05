@@ -444,6 +444,9 @@ def get_version_from_file(header_file):
 def get_msvs_for_python(vs_prefix=False):
     """Get MSVS version (eg 2008) for current python running."""
     if sys.version_info[:2] == (2, 7):
+        if 'MSC v.1900' in sys.version:
+            # custom Python-2.7-VS2015
+            return "VS2015" if vs_prefix else "2015"
         return "VS2008" if vs_prefix else "2008"
     elif sys.version_info[:2] == (3, 4):
         return "VS2010" if vs_prefix else "2010"

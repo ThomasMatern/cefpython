@@ -859,8 +859,6 @@ def create_prebuilt_binaries():
 
 def get_available_python_compilers():
     all_python_compilers = OrderedDict([
-        ("2008", VS2008_VCVARS),
-        ("2010", VS2010_VCVARS),
         ("2015", VS2015_VCVARS),
     ])
     ret_compilers = OrderedDict()
