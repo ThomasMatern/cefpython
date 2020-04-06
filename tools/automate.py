@@ -29,12 +29,14 @@ Usage:
                 [--fast-build FAST_BUILD]
                 [--force-chromium-update FORCE_CHROMIUM_UPDATE]
                 [--no-cef-update NO_CEF_UPDATE]
-                [--cef-branch BRANCH] [--cef-commit COMMIT]
+                [--cef-git-url URL] [--cef-branch BRANCH] [--cef-commit COMMIT]
                 [--build-dir BUILD_DIR] [--cef-build-dir CEF_BUILD_DIR]
                 [--ninja-jobs JOBS] [--gyp-generators GENERATORS]
                 [--gyp-msvs-version MSVS]
                 [--use-system-freetype USE_SYSTEM_FREETYPE]
                 [--use-gtk3 USE_GTK3]
+                [--use-ccache USE_CCACHE]
+                [--proprietary-codecs PROPRIETARY_CODECS]
                 [--no-depot-tools-update NO_DEPOT_TOOLS_UPDATE]
     automate.py (-h | --help) [type -h to show full description for options]
 
@@ -52,6 +54,7 @@ Options:
     --force-chromium-update  Force Chromium update (gclient sync etc).
     --no-cef-update          Do not update CEF sources (by default both cef/
                              directories are deleted on every run).
+    --cef-git-url=<url>      Git URL to clone CEF from, defaults to upstream
     --cef-branch=<b>         CEF branch. Defaults to CHROME_VERSION_BUILD from
                              "src/version/cef_version_{platform}.h".
     --cef-commit=<c>         CEF revision. Defaults to CEF_COMMIT_HASH from
@@ -59,13 +62,18 @@ Options:
     --build-dir=<dir1>       Build directory.
     --cef-build-dir=<dir2>   CEF build directory. By default same
                              as --build-dir.
-    --ninja-jobs=<jobs>      How many CEF jobs to run in parallel. To speed up
-                             building set it to number of cores in your CPU.
-                             By default set to cpu_count / 2.
+    --ninja-jobs=<jobs>      How many CEF jobs to run in parallel. By default
+                             sets to CPU threads * 2. If you need to perform
+                             other tasks on computer and it is slowed down
+                             by the build then decrease the number of ninja
+                             jobs.
     --gyp-generators=<gen>   Set GYP_GENERATORS [default: ninja].
     --gyp-msvs-version=<v>   Set GYP_MSVS_VERSION.
     --use-system-freetype    Use system Freetype library on Linux (Issue #402)
     --use-gtk3               Link CEF with GTK 3 libraries (Issue #446)
+    --use-ccache             Use ccache for faster (re)builds
+    --proprietary-codecs     Enable proprietary codecs such as H264 and AAC,
+                             licensing restrictions may apply.
     --no-depot-tools-update  Do not update depot_tools/ directory. When
                              building old unsupported versions of Chromium
                              you want to manually checkout an old version
@@ -88,7 +96,7 @@ from collections import OrderedDict
 from setuptools.msvc import msvc9_query_vcvarsall
 
 # Constants
-CEF_GIT_URL = "https://bitbucket.org/chromiumembedded/cef.git"
+CEF_UPSTREAM_GIT_URL = "https://bitbucket.org/chromiumembedded/cef.git"
 RUNTIME_MT = "MT"
 RUNTIME_MD = "MD"
 
@@ -104,6 +112,7 @@ class Options(object):
     fast_build = False
     force_chromium_update = False
     no_cef_update = False
+    cef_git_url = ""
     cef_branch = ""
     cef_commit = ""
     cef_version = ""
@@ -114,6 +123,8 @@ class Options(object):
     gyp_msvs_version = ""     # env variables are being used.
     use_system_freetype = False
     use_gtk3 = False
+    use_ccache = False
+    proprietary_codecs = False
     no_depot_tools_update = False
 
     # Internal options
@@ -160,6 +171,9 @@ def setup_options(docopt_args):
 
     Options.tools_dir = os.path.dirname(os.path.realpath(__file__))
     Options.cefpython_dir = os.path.dirname(Options.tools_dir)
+
+    if not Options.cef_git_url:
+        Options.cef_git_url = CEF_UPSTREAM_GIT_URL
 
     # If --cef-branch is specified will use latest CEF commit from that
     # branch. Otherwise get cef branch/commit from src/version/.
@@ -213,12 +227,11 @@ def setup_options(docopt_args):
 
     # ninja_jobs
     # cpu_count() returns number of CPU threads, not CPU cores.
-    # On i5 with 2 cores and 4 cpu threads the default of 4 ninja
-    # jobs slows down computer significantly.
+    # On i5 with 2 cores there are 4 cpu threads and will enable
+    # 8 ninja jobs by default.
     if not Options.ninja_jobs:
-        Options.ninja_jobs = int(multiprocessing.cpu_count() / 2)
-        if Options.ninja_jobs < 1:
-            Options.ninja_jobs = 1
+        Options.ninja_jobs = int(multiprocessing.cpu_count() * 2)
+        assert Options.ninja_jobs > 0
     Options.ninja_jobs = str(Options.ninja_jobs)
 
 
@@ -299,7 +312,7 @@ def create_cef_directories():
     # Clone cef repo and checkout branch
     if os.path.exists(cef_dir):
         rmdir(cef_dir)
-    run_git("clone -b %s %s cef" % (Options.cef_branch, CEF_GIT_URL),
+    run_git("clone -b %s %s cef" % (Options.cef_branch, Options.cef_git_url),
             Options.cef_build_dir)
     if Options.cef_commit:
         run_git("checkout %s" % Options.cef_commit, cef_dir)
@@ -577,15 +590,15 @@ def fix_cmake_variables_for_MD_library(undo=False, try_undo=False):
     # This replacements must be unique for the undo operation
     # to be reliable.
 
-    mt_find = r'CEF_RUNTIME_LIBRARY_FLAG "/MT"'
-    mt_replace = r'CEF_RUNTIME_LIBRARY_FLAG "/MD"'
+    mt_find = u'CEF_RUNTIME_LIBRARY_FLAG "/MT"'
+    mt_replace = u'CEF_RUNTIME_LIBRARY_FLAG "/MD"'
 
-    wd4275_find = ('/wd4244       '
-                   '# Ignore "conversion possible loss of data" warning')
-    wd4275_replace = ('/wd4244       '
-                      '# Ignore "conversion possible loss of data" warning'
-                      '\r\n'
-                      '    /wd4275 # Ignore "non dll-interface class"')
+    wd4275_find = (u'/wd4244       '
+                   u'# Ignore "conversion possible loss of data" warning')
+    wd4275_replace = (u'/wd4244       '
+                      u'# Ignore "conversion possible loss of data" warning'
+                      u'\r\n'
+                      u'    /wd4275 # Ignore "non dll-interface class"')
 
     cmake_variables = os.path.join(Options.cef_binary, "cmake",
                                    "cef_variables.cmake")
@@ -903,6 +916,14 @@ def getenv():
     if Options.use_gtk3:
         env["GN_DEFINES"] += " use_gtk3=true"
 
+    # Use ccache for faster (re)builds
+    if Options.use_ccache:
+        env["GN_DEFINES"] += " cc_wrapper=ccache"
+
+    # Enable proprietary codecs
+    if Options.proprietary_codecs:
+        env["GN_DEFINES"] += " proprietary_codecs=true ffmpeg_branding=Chrome"
+
     # To perform an official build set GYP_DEFINES=buildtype=Official.
     # This will disable debugging code and enable additional link-time
     # optimizations in Release builds.
@@ -994,13 +1015,10 @@ def run_automate_git():
         # later in cef_binary/ with cmake/ninja do works fine.
         args.append("--build-target=cefsimple")
 
-    # On Windows automate-git.py must be run using Python 2.7
-    # from depot_tools. depot_tools should already be added to PATH.
-    python = "python"  # *do not* replace with sys.executable!
     args = " ".join(args)
     command = script + " " + args
     working_dir = Options.cef_build_dir
-    return run_command("%s %s" % (python, command), working_dir)
+    return run_command("%s %s" % (sys.executable, command), working_dir)
 
 
 def run_make_distrib():

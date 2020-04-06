@@ -3,7 +3,6 @@
 Table of contents:
 * [Introduction](#introduction)
 * [Sponsors](#sponsors)
-  * [Thanks to Lampix for the v66 release](#thanks-to-lampix-for-the-v66-release)
 * [Install](#install)
 * [Tutorial](#tutorial)
 * [Examples](#examples)
@@ -11,16 +10,20 @@ Table of contents:
 * [Support development](#support-development)
   * [Thanks](#thanks)
 * [Releases](#releases)
+  * [Next release](#next-release)
+  * [Latest release](#latest-release)
+  * [v49 release (WinXP/Vista)](#v49-release-winxpvista)
+  * [v31 release (old systems)](#v31-release-old-systems)
 * [Other READMEs](#other-readmes)
 * [Quick links](#quick-links)
 
 
 ## Introduction
 
-CEF Python is a BSD-licensed open source project founded by Czarek Tomczak (hire me! download my [resume](https://drive.google.com/file/d/17xmoT5Z_zTHkVclqPzrs2aAV64Uiu7fh/view)) in 2012 and is based on Google Chromium and the
+CEF Python is a BSD-licensed open source project founded by Czarek Tomczak (hire me! see my [resume](https://drive.google.com/file/d/17xmoT5Z_zTHkVclqPzrs2aAV64Uiu7fh/view)) in 2012 and is based on Google Chromium and the
 [CEF Framework](https://bitbucket.org/chromiumembedded/cef)
 projects. The Chromium project focuses mainly on Google Chrome application
-development, while CEF focuses on facilitating embedded browser use cases
+development while CEF focuses on facilitating embedded browser use cases
 in third-party applications. Lots of applications use CEF control, there are
 more than [100 million CEF instances](http://en.wikipedia.org/wiki/Chromium_Embedded_Framework#Applications_using_CEF)
 installed around the world. [Examples of embedding](examples/README-examples.md)
@@ -45,6 +48,14 @@ or other kind of internet bots.
  <tr>
   <td>
    <div align="center">
+    <a href="https://www.fivestars.com/">
+     <img src="https://raw.githubusercontent.com/wiki/cztomczak/cefpython/images/fivestars200.png">
+    </a><br>
+    <a href="https://www.fivestars.com/">www.fivestars.com</a>
+   </div>
+  </td>
+  <td>
+   <div align="center">
     <a href="https://lampix.com/">
      <img src="https://raw.githubusercontent.com/wiki/cztomczak/cefpython/images/lampix200.png">
     </a><br>
@@ -59,6 +70,8 @@ or other kind of internet bots.
     <a href="http://www.blueplanet.com/">www.blueplanet.com</a>
    </div>
   </td>
+ </tr>
+ <tr>
   <td>
    <div align="center">
     <a href="https://clearchat.com/">
@@ -67,8 +80,6 @@ or other kind of internet bots.
     <a href="https://clearchat.com/">www.clearchat.com</a>
    <div align="center">
   </td>
- </tr>
- <tr>
   <td>
    <div align="center">
     <a href="http://www.rentouch.ch/">
@@ -92,14 +103,20 @@ See the [Support development](#support-development) section for a list of
 all the individuals and companies supporting CEF Python.
 
 
-### Thanks to Lampix for the v66 release
+**Thanks to Lampix for the v66 release**
 
-Many Thanks to Lampix for sponsoring the [v66 release](../../releases) of CEF Python.
+Many Thanks to Lampix for sponsoring the [v66 release](../../releases/tag/v66.0) of CEF Python.
 Lampix is the first hardware and software solution that turns any surface
 into a smart, augmented reality or interactive surface. Please visit its
 website here: https://lampix.com/ .
 
-[![lampix360](https://raw.githubusercontent.com/wiki/cztomczak/cefpython/images/lampix360.png)](https://lampix.com/)
+
+**Thanks to Fivestars for the v49 release (WinXP/Vista)**
+
+Thanks to Fivestars Loyalty, Inc. for sponsoring the
+[v49 release](../../releases/tag/v49.0) for legacy systems such
+as Windows XP and Vista. Please visit its website:
+https://www.fivestars.com/ .
 
 
 ## Install
@@ -116,12 +133,16 @@ pip install cefpython3==66.0
 
 ## Tutorial
 
-See the [Tutorial.md](docs/Tutorial.md) file.
+See the [Tutorial.md](docs/Tutorial.md) document.
 
 
 ## Examples
 
-See the [README-examples.md](examples/README-examples.md) file.
+See the [README-examples.md](examples/README-examples.md) document.
+
+For small and easy to understand code snippets that show various CEF
+features see the [README-snippets.md](examples/snippets/README-snippets.md)
+document.
 
 
 ## Support
@@ -174,6 +195,8 @@ on the Forum: [[ANN] Call for sponsors](https://groups.google.com/d/topic/cefpyt
 
 ### Thanks
 
+* [2018] Thanks to [Fivestars](https://www.fivestars.com/) for sponsoring
+  the v49 release for legacy systems (WinXP/Vista)
 * [2018] Many thanks to [Lampix](https://lampix.com/) for sponsoring the v66
   release for all platforms
 * [2017] Many thanks to [ClearChat Inc.](https://clearchat.com/) for sponsoring
@@ -201,7 +224,7 @@ Information on planned new and current releases, supported platforms,
 python versions, architectures and requirements. If you want to
 support old operating systems then choose the v31 release.
 
-**Next release**
+### Next release
 
 - To see planned new features or bugs to be fixed in the
   next release, see the
@@ -212,19 +235,43 @@ support old operating systems then choose the v31 release.
   [next release 2](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22next+release+2%22)
   label in the tracker
 
-**Latest release**
+### Latest release
 
 OS | Py2 | Py3 | 32bit | 64bit | Requirements
 --- | --- | --- | --- | --- | ---
 Windows | 2.7 | 3.4 / 3.5 / 3.6 / 3.7 | Yes | Yes | Windows 7+
-Linux | 2.7 | 3.4 / 3.5 / 3.6 / 3.7 | Yes | Yes | Debian 8+ / Ubuntu 14.04+
+Linux | 2.7 | 3.4 / 3.5 / 3.6 / 3.7 | Yes | Yes | Debian 8+, Ubuntu 14.04+, Fedora 24+, openSUSE 13.3+
 Mac | 2.7 | 3.4 / 3.5 / 3.6 / 3.7 | No | Yes | MacOS 10.9+
 
 These platforms are not supported yet:
 - ARM - see [Issue #267](../../issues/267)
 - Android - see [Issue #307](../../issues/307)
 
-**v31 release**
+
+### v49 release (WinXP/Vista)
+
+OS | Py2 | Py3 | 32bit | 64bit | Requirements
+--- | --- | --- | --- | --- | ---
+Windows | 2.7 | 3.4 | Yes | Yes | Windows XP+
+
+- Install with command: `pip --no-cache-dir install cefpython3==49.0`.
+    - Please note that if you were previously installing cefpython3
+      package it is required to use the `--no-cache-dir` flag,
+      otherwise pip will end up with error message
+      `No matching distribution found for cefpython3==49.0`.
+      This happens because 49.0 release occured after 57.0 and 66.0
+      releases.
+- Downloads are available on GitHub Releases tagged
+    [v49.0](../../releases/tag/v49.0).
+- See [Migration guide](docs/Migration-guide.md) document for changes
+  in this release
+- Documentation is available in the [docs/](../../tree/cefpython49-winxp/docs)
+  directory in the `cefpython49-winxp` branch
+- API reference is available in the [api/](../../tree/cefpython49-winxp/api)
+  directory in the `cefpython49-winxp` branch
+
+
+### v31 release (old systems)
 
 OS | Py2 | Py3 | 32bit | 64bit | Requirements
 --- | --- | --- | --- | --- | ---
