@@ -88,6 +88,7 @@ import shlex
 import subprocess
 import platform
 import docopt
+import patch
 import stat
 import glob
 import shutil
@@ -116,6 +117,7 @@ class Options(object):
     cef_branch = ""
     cef_commit = ""
     cef_version = ""
+    cef_commit_number = ""
     build_dir = ""
     cef_build_dir = ""
     ninja_jobs = None
@@ -182,6 +184,7 @@ def setup_options(docopt_args):
         Options.cef_branch = get_cefpython_version()["CHROME_VERSION_BUILD"]
         Options.cef_commit = get_cefpython_version()["CEF_COMMIT_HASH"]
         Options.cef_version = get_cefpython_version()["CEF_VERSION"]
+        Options.cef_commit_number = get_cefpython_version()["CEF_COMMIT_NUMBER"]
 
     # --gyp-msvs-version
     if not Options.gyp_msvs_version:
@@ -367,6 +370,14 @@ def update_cef_patches():
         fp.write(new_contents.encode("utf-8"))
 
 
+def patch_prebuilt():
+    patch_root = Options.cef_binary
+    patch_file = os.path.join(Options.cefpython_dir, 'patches', 'prebuilt_{}.patch'.format(Options.cef_commit_number))
+    if os.path.exists(patch_file):
+        p = patch.fromfile(patch_file)
+        p.apply(root=patch_root)
+
+
 def build_cef_projects():
     """Build cefclient, cefsimple, ceftests, libcef_dll_wrapper."""
     print("[automate.py] Build cef projects...")
@@ -426,6 +437,9 @@ def build_cef_projects():
     if already_built:
         print("[automate.py] Already built: cefclient, cefsimple, ceftests")
     else:
+        if Options.prebuilt_cef:
+            print("[automate.py] Applying patches to prebuilt cef")
+            patch_prebuilt()
         print("[automate.py] Build cefclient, cefsimple, ceftests")
         # Cmake
         command = prepare_build_command()

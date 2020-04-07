@@ -1,5 +1,6 @@
 Cython == 0.28.4
 docopt >= 0.6.2
+patch
 setuptools
 wheel
 Pillow
