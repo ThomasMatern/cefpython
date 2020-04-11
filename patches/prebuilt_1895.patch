@@ -1,0 +1,13 @@
+diff --git a/tests/cefclient/browser/browser_window_std_win.cc b/tests/cefclient/browser/browser_window_std_win.cc
+index fa7ee02..90f17aa 100644
+--- a/tests/cefclient/browser/browser_window_std_win.cc
++++ b/tests/cefclient/browser/browser_window_std_win.cc
+@@ -65,7 +65,7 @@ void BrowserWindowStdWin::ShowPopup(ClientWindowHandle parent_handle,
+                  static_cast<int>(height), SWP_NOZORDER | SWP_NOACTIVATE);
+ 
+     const bool no_activate =
+-        GetWindowLongPtr(parent_handle, GWL_EXSTYLE) & WS_EX_NOACTIVATE;
++        (GetWindowLongPtr(parent_handle, GWL_EXSTYLE) & WS_EX_NOACTIVATE) != 0;
+     ShowWindow(hwnd, no_activate ? SW_SHOWNOACTIVATE : SW_SHOW);
+   }
+ }

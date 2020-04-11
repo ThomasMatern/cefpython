@@ -387,20 +387,15 @@ def copy_cpp_extension_dependencies_issue359(pkg_dir):
     # Python 2.7
     if os.path.exists(os.path.join(pkg_dir, "cefpython_py27.pyd")):
         if ARCH32:
-            search_paths = [
-                # This runtime version is shipped with Python 2.7.14
-                r"c:\Windows\winsxs\x86_microsoft.vc90.crt_1fc8b3b9a1e18e3b"
-                r"_9.0.30729.1_none_e163563597edeada\msvcp90.dll",
-            ]
+            # This runtime version is shipped with Python 2.7.14
+            search_paths = glob.glob(r'c:\Windows\winsxs\x86_microsoft.vc90.*\msvcp90.dll')
         else:
-            search_paths = [
-                # This runtime version is shipped with Python 2.7.14
-                r"c:\Windows\winsxs\amd64_microsoft.vc90.crt_1fc8b3b9a1e18e3b"
-                r"_9.0.30729.1_none_99b61f5e8371c1d4\msvcp90.dll",
-            ]
+            # This runtime version is shipped with Python 2.7.14
+            search_paths = glob.glob(r'c:\Windows\winsxs\amd64_microsoft.vc90.*\msvcp90.dll')
         root_search_paths.append(search_paths)
 
-    assert len(root_search_paths)
+    if not root_search_paths:
+        raise Exception("C++ extension dll dependency not found.")
 
     for search_paths in root_search_paths:
         found = False
