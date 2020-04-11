@@ -181,10 +181,14 @@ def setup_options(docopt_args):
     # branch. Otherwise get cef branch/commit from src/version/.
     if not Options.cef_branch:
         # Use branch/commit from the src/version/cef_version_*.h file
-        Options.cef_branch = get_cefpython_version()["CHROME_VERSION_BUILD"]
-        Options.cef_commit = get_cefpython_version()["CEF_COMMIT_HASH"]
-        Options.cef_version = get_cefpython_version()["CEF_VERSION"]
-        Options.cef_commit_number = get_cefpython_version()["CEF_COMMIT_NUMBER"]
+        versions = get_cefpython_version()
+        Options.cef_branch = versions["CHROME_VERSION_BUILD"]
+        Options.cef_commit = versions["CEF_COMMIT_HASH"]
+        Options.cef_version = versions["CEF_VERSION"]
+        Options.cef_version_major = versions["CEF_VERSION_MAJOR"]
+        Options.cef_version_minor = versions["CEF_VERSION_MINOR"]
+        Options.cef_version_patch = versions["CEF_VERSION_PATCH"]
+        Options.cef_commit_number = versions["CEF_COMMIT_NUMBER"]
 
     # --gyp-msvs-version
     if not Options.gyp_msvs_version:
@@ -372,7 +376,10 @@ def update_cef_patches():
 
 def patch_prebuilt():
     patch_root = Options.cef_binary
-    patch_file = os.path.join(Options.cefpython_dir, 'patches', 'prebuilt_{}.patch'.format(Options.cef_commit_number))
+    patch_name = 'prebuilt_{}.{}.{}.patch'.format(Options.cef_version_major,
+                                                  Options.cef_version_minor,
+                                                  Options.cef_version_patch)
+    patch_file = os.path.join(Options.cefpython_dir, 'patches', patch_name)
     if os.path.exists(patch_file):
         p = patch.fromfile(patch_file)
         p.apply(root=patch_root)
