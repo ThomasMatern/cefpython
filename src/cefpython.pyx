@@ -588,8 +588,6 @@ def Initialize(applicationSettings=None, commandLineSwitches=None, **kwargs):
     else:
         # multi_threaded_message_loop_windows overrides multi_threaded_message_loop
         application_settings["multi_threaded_message_loop"] = application_settings["multi_threaded_message_loop_windows"]
-    if not "single_process" in application_settings:
-        application_settings["single_process"] = False
     # ------------------------------------------------------------------------
 
     # ------------------------------------------------------------------------
