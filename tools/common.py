@@ -445,8 +445,8 @@ def get_version_from_command_line_args(caller_script, ignore_error=False):
 
 def get_cefpython_version():
     """Get CEF version from the 'src/version/' directory."""
-    version = get_version_from_file(os.path.join(SRC_DIR, "version", "cef_version_"+OS_POSTFIX+".h"))
-    api = get_version_from_file(os.path.join(SRC_DIR, "version", "cef_api_hash_" + OS_POSTFIX + ".h"))
+    version = get_version_from_file(os.path.join(SRC_DIR, "version", "cef_version.h"))
+    api = get_version_from_file(os.path.join(SRC_DIR, "version", "cef_api_hash.h"))
     version.update(api)
     return version
 
