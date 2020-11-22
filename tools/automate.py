@@ -171,7 +171,7 @@ def setup_options(docopt_args):
         if hasattr(Options, key2) and value is not None:
             setattr(Options, key2, value)
 
-    Options.tools_dir = os.path.dirname(os.path.realpath(__file__))
+    Options.tools_dir = os.path.dirname(os.path.abspath(__file__))
     Options.cefpython_dir = os.path.dirname(Options.tools_dir)
 
     if not Options.cef_git_url:
@@ -199,7 +199,7 @@ def setup_options(docopt_args):
 
     # --build-dir
     if Options.build_dir:
-        Options.build_dir = os.path.realpath(Options.build_dir)
+        Options.build_dir = os.path.abspath(Options.build_dir)
     else:
         Options.build_dir = os.path.join(Options.cefpython_dir, "build")
     if " " in Options.build_dir:
@@ -211,7 +211,7 @@ def setup_options(docopt_args):
 
     # --cef-build-dir
     if Options.cef_build_dir:
-        Options.cef_build_dir = os.path.realpath(Options.cef_build_dir)
+        Options.cef_build_dir = os.path.abspath(Options.cef_build_dir)
     else:
         Options.cef_build_dir = Options.build_dir
     if " " in Options.cef_build_dir:
@@ -714,7 +714,7 @@ def prepare_build_command(build_lib=False, vcvars=None):
             command.append(VS_PLATFORM_ARG)
         else:
             if int(Options.cef_branch) >= 2704:
-                command.append(VS2015_VCVARS)
+                command.append(VS2019_VCVARS)
             else:
                 command.append(VS2013_VCVARS)
             command.append(VS_PLATFORM_ARG)
@@ -893,7 +893,7 @@ def create_prebuilt_binaries():
 
 def get_available_python_compilers():
     all_python_compilers = OrderedDict([
-        ("2015", VS2015_VCVARS),
+        ("2019", VS2019_VCVARS),
     ])
     ret_compilers = OrderedDict()
     for msvs in all_python_compilers:
