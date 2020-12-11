@@ -219,6 +219,9 @@ SUBPROCESS_EXE = os.path.join(BUILD_SUBPROCESS,
 
 VS_PLATFORM_ARG = "x86" if ARCH32 else "amd64"
 
+VS2019_VCVARS = ("C:\\Program Files (x86)\\Microsoft Visual Studio\\2019"
+                 "\\Professional\\VC\\Auxiliary\\Build\\vcvarsall.bat")
+
 VS2015_VCVARS = ("C:\\Program Files (x86)\\Microsoft Visual Studio 14.0"
                  "\\VC\\vcvarsall.bat")
 
@@ -477,6 +480,8 @@ def get_msvs_for_python(vs_prefix=False):
         return "VS2015" if vs_prefix else "2015"
     elif sys.version_info[:2] == (3, 7):
         return "VS2015" if vs_prefix else "2015"
+    elif sys.version_info[:2] == (3, 8):
+        return "VS2019" if vs_prefix else "2019"
     else:
         print("ERROR: This version of Python is not supported")
         sys.exit(1)
